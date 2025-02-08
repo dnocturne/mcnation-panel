@@ -10,7 +10,7 @@ interface DiscordData {
 export function DiscordWidget() {
   const [memberCount, setMemberCount] = useState<number>(0)
   const [mounted, setMounted] = useState(false)
-  const { theme } = useTheme()
+  const { resolvedTheme } = useTheme()
 
   useEffect(() => {
     setMounted(true)
@@ -44,7 +44,7 @@ export function DiscordWidget() {
         target="_blank" 
         rel="noopener noreferrer"
         className={`flex items-center gap-2 rounded-full px-4 py-2 transition-colors border border-[#5865F2] ${
-          theme === 'dark' 
+          resolvedTheme === 'dark' 
             ? 'bg-[#23272A] text-white hover:bg-[#2C2F33]' 
             : 'bg-white text-[#23272A] hover:bg-gray-100'
         }`}
