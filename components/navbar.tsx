@@ -24,6 +24,21 @@ import { Button } from "@/components/ui/button"
 import { ModeToggle } from "./theme-switcher"
 import { DiscordButton } from "./discord-button"
 
+const navItems = [
+  {
+    title: "Home",
+    href: "/",
+  },
+  {
+    title: "Admin Dashboard",
+    href: "/admin",
+  },
+  {
+    title: "REST API Config",
+    href: "/admin/rest",
+  },
+];
+
 export default function Navbar() {
   return (
     <header className="fixed top-0 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
@@ -82,13 +97,20 @@ export default function Navbar() {
               <NavigationMenuItem>
                 <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
                 <NavigationMenuContent>
-                <div className="p-4 w-[300px]">
-                <p className="text-sm text-muted-foreground mb-2">
-                      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.
+                  <div className="p-4 w-[300px]">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Server Administration
                     </p>
-                    <NavigationMenuLink className="block p-2 hover:bg-accent">
-                      Admin Dashboard
-                    </NavigationMenuLink>
+                    <Link href="/admin" legacyBehavior passHref>
+                      <NavigationMenuLink className="block p-2 hover:bg-accent">
+                        Admin Dashboard
+                      </NavigationMenuLink>
+                    </Link>
+                    <Link href="/admin/rest" legacyBehavior passHref>
+                      <NavigationMenuLink className="block p-2 hover:bg-accent">
+                        REST API Config
+                      </NavigationMenuLink>
+                    </Link>
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
@@ -118,8 +140,11 @@ export default function Navbar() {
                   <Link href="#" className="text-sm font-medium hover:underline">
                     Suspendisse
                   </Link>
-                  <Link href="#" className="text-sm font-medium hover:underline">
-                    Admin
+                  <Link href="/admin" className="text-sm font-medium hover:underline">
+                    Admin Dashboard
+                  </Link>
+                  <Link href="/admin/rest" className="text-sm font-medium hover:underline">
+                    REST API Config
                   </Link>
                 </div>
                 <div className="flex gap-2 mt-4">
