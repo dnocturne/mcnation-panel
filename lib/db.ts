@@ -10,7 +10,7 @@ const dbConfig = {
 };
 
 // Create MySQL connection pool
-const pool = mysql.createPool(dbConfig);
+export const pool = mysql.createPool(dbConfig);
 
 // Add this interface
 interface WebSocketConfig extends RowDataPacket {

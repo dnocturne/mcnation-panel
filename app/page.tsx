@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { NavigationMenuDemo } from "@/components/navbar";
 import { DiscordWidget } from "@/components/discord-widget"
+import { ServerMonitor } from "@/components/server-monitor"
 
 export default function HeroSectionGradientBackground() {
   return (
@@ -47,7 +48,8 @@ export default function HeroSectionGradientBackground() {
                         Learn more
                       </Button>
                     </div>
-                    <div className="w-full max-w-sm">
+                    <div className="w-full max-w-sm space-y-2">
+                      <ServerMonitor />
                       <DiscordWidget />
                     </div>
                   </div>

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Server, Terminal, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { withAuth } from "@/components/protected-route"
 
 interface ServerStatus {
   onlinePlayers: number;
@@ -31,7 +32,7 @@ async function fetchServerStatus(config: ServerConfig | null) {
     throw new Error("Server configuration not found");
   }
 
-  // Use localhost for local development, or your server's actual IP/domain for production
+  // Use localhost for local development, or server's actual IP/domain for production
   const host = config.host === "0.0.0.0" ? "localhost" : config.host;
   
   const response = await fetch(`http://${host}:${config.port}/status`, {
@@ -73,7 +74,7 @@ async function executeCommand(config: ServerConfig, command: string): Promise<Co
   return response.json();
 }
 
-export default function AdminPage() {
+function AdminPage() {
   const [config, setConfig] = useState<ServerConfig | null>(null);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [command, setCommand] = useState("");
@@ -135,13 +136,10 @@ export default function AdminPage() {
     <div className="min-h-screen bg-background">
       <NavigationMenuDemo />
       <div className="container mx-auto py-8 px-4 mt-14">
-        <div className="flex items-center justify-between mb-8">
+        <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground">
             Admin Dashboard
           </h1>
-          <div className="text-sm text-muted-foreground">
-            Last updated: {new Date().toLocaleTimeString()}
-          </div>
         </div>
 
         {isConfigLoading || (config && isLoading) ? (
@@ -242,4 +240,6 @@ export default function AdminPage() {
     </div>
   );
 }
+
+export default withAuth(AdminPage)
 
