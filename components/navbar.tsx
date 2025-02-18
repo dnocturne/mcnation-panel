@@ -2,9 +2,10 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { cn } from "@/lib/utils"
-import { Menu } from "lucide-react"
+import { useTheme } from "next-themes"
+import { Moon, Sun } from "lucide-react"
 
+import { cn } from "@/lib/utils"
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -12,173 +13,74 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu"
 import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetTitle,
-} from "@/components/ui/sheet"
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
-import { ModeToggle } from "./theme-switcher"
-import { DiscordButton } from "./discord-button"
 
-const navItems = [
-  {
-    title: "Home",
-    href: "/",
-  },
-  {
-    title: "Admin Dashboard",
-    href: "/admin",
-  },
-  {
-    title: "REST API Config",
-    href: "/admin/rest",
-  },
-];
+export function NavigationMenuDemo() {
+  const { setTheme, theme } = useTheme()
 
-export default function Navbar() {
   return (
-    <header className="fixed top-0 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
-      <div className="px-4 flex h-14 items-center justify-between max-w-[2520px] mx-auto">
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex flex-1">
-          <NavigationMenu>
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Lorem Ipsum</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[400px] gap-3 p-4">
-                    <ListItem href="#" title="Dolor Sit Amet">
-                      Consectetur adipiscing elit, sed do eiusmod tempor.
-                    </ListItem>
-                    <ListItem href="#" title="Consectetur Adipiscing">
-                      Sed do eiusmod tempor incididunt ut labore.
-                    </ListItem>
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Vestibulum</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[500px] gap-3 p-4 md:grid-cols-2">
-                    <ListItem href="#" title="Mauris Rhoncus">
-                      Phasellus volutpat metus eget egestas.
-                    </ListItem>
-                    <ListItem href="#" title="Phasellus Volutpat">
-                      Nullam dignissim convallis est.
-                    </ListItem>
-                    <ListItem href="#" title="Nullam Dignissim">
-                      Fusce vehicula dolor arcu.
-                    </ListItem>
-                    <ListItem href="#" title="Fusce Vehicula">
-                      Integer vel augue consequat.
-                    </ListItem>
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+    <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 fixed top-0 w-full z-50">
+      <div className="container flex h-14 items-center">
+        <NavigationMenu>
+          <NavigationMenuList className="relative z-10 flex max-w-max flex-1 items-center justify-center">
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <ul className="grid w-[200px] gap-3 p-4">
+                  <ListItem href="/admin" title="Dashboard">
+                    View server status and execute commands
+                  </ListItem>
+                  <ListItem href="/admin/rest" title="API Config">
+                    Configure REST API connection settings
+                  </ListItem>
+                </ul>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
 
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Suspendisse</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="p-4 w-[300px]">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.
-                    </p>
-                    <NavigationMenuLink className="block p-2 hover:bg-accent">
-                      Nulla Facilisi
-                    </NavigationMenuLink>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="p-4 w-[300px]">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Server Administration
-                    </p>
-                    <Link href="/admin" legacyBehavior passHref>
-                      <NavigationMenuLink className="block p-2 hover:bg-accent">
-                        Admin Dashboard
-                      </NavigationMenuLink>
-                    </Link>
-                    <Link href="/admin/rest" legacyBehavior passHref>
-                      <NavigationMenuLink className="block p-2 hover:bg-accent">
-                        REST API Config
-                      </NavigationMenuLink>
-                    </Link>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-        </div>
-
-        {/* Mobile Navigation */}
-        <div className="md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="mr-2">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] sm:w-[400px]">
-              <SheetTitle>Navigation Menu</SheetTitle>
-              <nav className="flex flex-col gap-4 mt-4">
-                <div className="flex flex-col space-y-3">
-                  <Link href="#" className="text-sm font-medium hover:underline">
-                    Lorem Ipsum
-                  </Link>
-                  <Link href="#" className="text-sm font-medium hover:underline">
-                    Vestibulum
-                  </Link>
-                  <Link href="#" className="text-sm font-medium hover:underline">
-                    Suspendisse
-                  </Link>
-                  <Link href="/admin" className="text-sm font-medium hover:underline">
-                    Admin Dashboard
-                  </Link>
-                  <Link href="/admin/rest" className="text-sm font-medium hover:underline">
-                    REST API Config
-                  </Link>
-                </div>
-                <div className="flex gap-2 mt-4">
-                  <DiscordButton />
-                  <ModeToggle />
-                </div>
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </div>
-
-        {/* Right-side buttons */}
-        <div className="flex items-center gap-2">
-          <div className="hidden md:flex items-center gap-2">
-            <DiscordButton />
-            <ModeToggle />
-          </div>
+        <div className="ml-auto">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+                >
+                  <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                  <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                  <span className="sr-only">Toggle theme</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Toggle theme</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
-    </header>
+    </div>
   )
 }
 
 const ListItem = React.forwardRef<
   React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a"> & {
-    title: string
-  }
->(({ className, title, children, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<"a"> & { title: string }
+>(({ className, title, children, href, ...props }, ref) => {
   return (
     <li>
       <NavigationMenuLink asChild>
         <a
           ref={ref}
+          href={href}
           className={cn(
             "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
             className

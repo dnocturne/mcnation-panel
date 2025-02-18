@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/navbar";
+import { NavigationMenuDemo } from "@/components/navbar";
 import { DiscordWidget } from "@/components/discord-widget"
 
 export default function HeroSectionGradientBackground() {
   return (
     <div className="snap-y snap-mandatory h-screen overflow-y-scroll">
       <section className="snap-start h-screen w-full relative">
-        <Navbar />
+        <NavigationMenuDemo />
         <main className="flex min-h-screen items-center relative overflow-hidden">
           {/* Hero */}
           <div className="relative w-full py-24 lg:py-32">
@@ -40,11 +40,16 @@ export default function HeroSectionGradientBackground() {
                     </p>
                   </div>
                   {/* Buttons */}
-                  <div className="mt-8 gap-3 flex justify-center">
-                    <Button size={"lg"}>Get started</Button>
-                    <Button size={"lg"} variant={"outline"}>
-                      Learn more
-                    </Button>
+                  <div className="mt-8 space-y-4 flex flex-col items-center">
+                    <div className="flex gap-3">
+                      <Button size={"lg"}>Get started</Button>
+                      <Button size={"lg"} variant={"outline"}>
+                        Learn more
+                      </Button>
+                    </div>
+                    <div className="w-full max-w-sm">
+                      <DiscordWidget />
+                    </div>
                   </div>
                   {/* End Buttons */}
                 </div>
@@ -67,8 +72,7 @@ export default function HeroSectionGradientBackground() {
           <h2 className="text-4xl font-bold mb-4">Third Section</h2>
           <p className="text-xl text-muted-foreground">Keep scrolling!</p>
         </div>
-      </section>1
-      <DiscordWidget />
+      </section>
     </div>
   );
 }
