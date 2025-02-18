@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Server, Terminal, AlertCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ServerStatus {
   onlinePlayers: number;
@@ -74,19 +75,41 @@ async function executeCommand(config: ServerConfig, command: string): Promise<Co
 
 export default function AdminPage() {
   const [config, setConfig] = useState<ServerConfig | null>(null);
+  const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [command, setCommand] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
-    getServerConfig().then(setConfig);
+    getServerConfig()
+      .then(setConfig)
+      .finally(() => setIsConfigLoading(false));
   }, []);
 
   const { data: serverStatus, error, isLoading } = useQuery<ServerStatus>({
     queryKey: ['serverStatus', config],
     queryFn: () => fetchServerStatus(config),
     enabled: !!config,
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 5000,
   });
+
+  const StatusSkeleton = () => (
+    <div className="grid gap-6 md:grid-cols-3">
+      {[1, 2, 3].map((i) => (
+        <Card key={i}>
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-4 rounded-full" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Skeleton className="h-7 w-16" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 
   const handleExecuteCommand = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,35 +144,33 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {!config ? (
+        {isConfigLoading || (config && isLoading) ? (
+          <StatusSkeleton />
+        ) : !config ? (
           <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/10">
             <CardContent className="flex items-center gap-4 p-4">
               <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              <p className="text-yellow-800 dark:text-yellow-200">
-                Server configuration not found. Please configure the server connection first.
-              </p>
+              <div>
+                <p className="text-yellow-800 dark:text-yellow-200 font-medium">
+                  Server configuration not found
+                </p>
+                <p className="text-yellow-700 dark:text-yellow-300 text-sm">
+                  Please configure the REST API connection in the <a href="/admin/rest" className="underline">API Config</a> page.
+                </p>
+              </div>
             </CardContent>
           </Card>
         ) : error ? (
           <Card className="border-red-200 bg-red-50 dark:bg-red-900/10">
             <CardContent className="flex items-center gap-4 p-4">
               <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-              <p className="text-red-800 dark:text-red-200">
-                Error connecting to server. Please check your configuration.
-              </p>
-            </CardContent>
-          </Card>
-        ) : isLoading ? (
-          <Card>
-            <CardContent className="p-4">
-              <div className="animate-pulse flex space-x-4">
-                <div className="flex-1 space-y-4 py-1">
-                  <div className="h-4 bg-muted rounded w-3/4"></div>
-                  <div className="space-y-2">
-                    <div className="h-4 bg-muted rounded"></div>
-                    <div className="h-4 bg-muted rounded w-5/6"></div>
-                  </div>
-                </div>
+              <div>
+                <p className="text-red-800 dark:text-red-200 font-medium">
+                  Connection Error
+                </p>
+                <p className="text-red-700 dark:text-red-300 text-sm">
+                  Failed to connect to the server. Please check your configuration.
+                </p>
               </div>
             </CardContent>
           </Card>
