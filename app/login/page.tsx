@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-store"
+import type { AuthState } from "@/lib/auth-store"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -16,30 +17,32 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
-  const setToken = useAuth((state) => state.setToken)
+  const setToken = useAuth((state: AuthState) => state.setToken)
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
     setIsLoading(true)
 
     try {
+      const requestData = { username, password };
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(requestData),
       })
 
+      const data = await response.json()
+      
       if (!response.ok) {
-        throw new Error("Login failed")
+        throw new Error(data.message || "Login failed")
       }
 
-      const { token } = await response.json()
-      setToken(token)
+      setToken(data.token, data.username)
       router.push("/admin")
     } catch (error) {
       toast({
         title: "Error",
-        description: "Invalid username or password",
+        description: error instanceof Error ? error.message : "Login failed",
         variant: "destructive",
       })
     } finally {

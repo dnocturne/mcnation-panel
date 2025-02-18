@@ -74,13 +74,15 @@ async function executeCommand(config: ServerConfig, command: string): Promise<Co
   return response.json();
 }
 
-function AdminPage() {
+const AdminPage = () => {
+  const [isMounted, setIsMounted] = useState(false)
   const [config, setConfig] = useState<ServerConfig | null>(null);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [command, setCommand] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
+    setIsMounted(true)
     getServerConfig()
       .then(setConfig)
       .finally(() => setIsConfigLoading(false));
@@ -92,6 +94,8 @@ function AdminPage() {
     enabled: !!config,
     refetchInterval: 5000,
   });
+
+  if (!isMounted) return null
 
   const StatusSkeleton = () => (
     <div className="grid gap-6 md:grid-cols-3">
