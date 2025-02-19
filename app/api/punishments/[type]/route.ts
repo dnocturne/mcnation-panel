@@ -18,6 +18,15 @@ export async function GET(
   request: Request,
   { params }: { params: { type: string } }
 ) {
+  // Await the params object to access its properties
+  const { type } = await params
+  if (!type) {
+    return NextResponse.json(
+      { error: "Missing punishment type parameter" },
+      { status: 400 }
+    );
+  }
+  
   const { searchParams } = new URL(request.url)
   const page = parseInt(searchParams.get("page") || "1")
   const pageSize = parseInt(searchParams.get("pageSize") || "10")
@@ -30,7 +39,7 @@ export async function GET(
     warns: "litebans_warnings"
   }
 
-  const table = tableMap[params.type as keyof typeof tableMap]
+  const table = tableMap[type as keyof typeof tableMap]
   if (!table) {
     return NextResponse.json(
       { error: "Invalid punishment type" },
@@ -40,7 +49,7 @@ export async function GET(
 
   try {
     let query = ''
-    if (params.type === 'kicks') {
+    if (type === 'kicks') {
       query = `
         SELECT 
           p.id,
@@ -88,9 +97,9 @@ export async function GET(
       total: totalResult[0].count
     })
   } catch (error) {
-    console.error(`Error fetching ${params.type}:`, error)
+    console.error(`Error fetching ${type}:`, error)
     return NextResponse.json(
-      { error: `Failed to fetch ${params.type}` },
+      { error: `Failed to fetch ${type}` },
       { status: 500 }
     )
   }
