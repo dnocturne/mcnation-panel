@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useState, useEffect } from "react"
 import fs from "fs"
 import { useQuery } from "@tanstack/react-query"
+import { usePermission } from "@/hooks/use-permissions"
 
 import { cn } from "@/lib/utils"
 import {
@@ -41,6 +42,7 @@ export function NavigationMenuDemo() {
   const { username, logout } = useAuth()
   const { setTheme, theme } = useTheme()
   const router = useRouter()
+  const { data: hasDashboardAccess, isLoading } = usePermission('panel.dashboard')
 
   const { data: avatarData } = useQuery({
     queryKey: ['avatar', username],
@@ -70,19 +72,21 @@ export function NavigationMenuDemo() {
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[200px] gap-3 p-4">
-                    <ListItem href="/admin" title="Dashboard">
-                      View server status and execute commands
-                    </ListItem>
-                    <ListItem href="/admin/rest" title="API Config">
-                      Configure REST API connection settings
-                    </ListItem>
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+              {!isLoading && hasDashboardAccess && (
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger>Admin</NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px]">
+                      <ListItem href="/admin" title="Dashboard">
+                        Server management dashboard
+                      </ListItem>
+                      <ListItem href="/admin/rest" title="API Config">
+                        Configure REST API connection settings
+                      </ListItem>
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              )}
               <NavigationMenuItem>
                 <Link href="/punishments" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>

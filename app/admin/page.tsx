@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Server, Terminal, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { withAuth } from "@/components/protected-route"
+import { useRouter } from "next/navigation"
+import { usePermission } from "@/hooks/use-permissions"
 
 interface ServerStatus {
   onlinePlayers: number;
@@ -80,6 +82,8 @@ const AdminPage = () => {
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [command, setCommand] = useState("");
   const { toast } = useToast();
+  const router = useRouter()
+  const { data: hasDashboardAccess, isLoading } = usePermission('panel.dashboard')
 
   useEffect(() => {
     setIsMounted(true)
@@ -88,14 +92,20 @@ const AdminPage = () => {
       .finally(() => setIsConfigLoading(false));
   }, []);
 
-  const { data: serverStatus, error, isLoading } = useQuery<ServerStatus>({
+  useEffect(() => {
+    if (!isLoading && hasDashboardAccess === false) {
+      router.push('/')
+    }
+  }, [hasDashboardAccess, isLoading, router])
+
+  const { data: serverStatus, error, isLoading: serverStatusLoading } = useQuery<ServerStatus>({
     queryKey: ['serverStatus', config],
     queryFn: () => fetchServerStatus(config),
     enabled: !!config,
     refetchInterval: 5000,
   });
 
-  if (!isMounted) return null
+  if (!isMounted || isLoading || !hasDashboardAccess) return null
 
   const StatusSkeleton = () => (
     <div className="grid gap-6 md:grid-cols-3">
@@ -146,7 +156,7 @@ const AdminPage = () => {
           </h1>
         </div>
 
-        {isConfigLoading || (config && isLoading) ? (
+        {isConfigLoading || (config && serverStatusLoading) ? (
           <StatusSkeleton />
         ) : !config ? (
           <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/10">
