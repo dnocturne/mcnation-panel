@@ -94,6 +94,11 @@ export function NavigationMenuDemo() {
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
+              <NavigationMenuItem>
+                <NavigationMenuLink href="/teams" className={navigationMenuTriggerStyle()}>
+                  Our Team
+                </NavigationMenuLink>
+              </NavigationMenuItem>
             </NavigationMenuList>
           </NavigationMenu>
 
