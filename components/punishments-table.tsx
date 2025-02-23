@@ -34,16 +34,35 @@ interface Punishment {
 
 interface PunishmentsTableProps {
   type: "mutes" | "bans" | "kicks" | "warns"
+  playerFilter?: string
+  activeOnly?: boolean
+  expiredOnly?: boolean
 }
 
-export function PunishmentsTable({ type }: PunishmentsTableProps) {
+export function PunishmentsTable({ 
+  type, 
+  playerFilter,
+  activeOnly,
+  expiredOnly 
+}: PunishmentsTableProps) {
   const [page, setPage] = useState(1)
   const pageSize = 10
 
   const { data, isLoading } = useQuery({
-    queryKey: [type, page],
+    queryKey: [type, page, playerFilter, activeOnly, expiredOnly],
     queryFn: async () => {
-      const response = await fetch(`/api/punishments/${type}?page=${page}&pageSize=${pageSize}`)
+      let url = `/api/punishments/${type}?page=${page}&pageSize=${pageSize}`
+      if (playerFilter) {
+        url += `&player=${encodeURIComponent(playerFilter)}`
+      }
+      if (activeOnly) {
+        url += '&status=active'
+      }
+      if (expiredOnly) {
+        url += '&status=expired'
+      }
+      
+      const response = await fetch(url)
       if (!response.ok) {
         throw new Error(`Failed to fetch ${type}`)
       }
