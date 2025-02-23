@@ -38,7 +38,7 @@ export default function LoginPage() {
       }
 
       setToken(data.token, data.username)
-      router.push("/admin")
+      router.push("/")
     } catch (error) {
       toast({
         title: "Error",

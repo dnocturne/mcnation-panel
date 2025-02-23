@@ -36,9 +36,6 @@ export function ProfileHeader({ username, isOwnProfile, userProfile, onlineStatu
           </div>
         </div>
       </div>
-      {isOwnProfile && (
-        <Button>Edit Profile</Button>
-      )}
     </div>
   )
 }
