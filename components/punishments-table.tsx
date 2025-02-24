@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/pagination"
 import { Card } from "@/components/ui/card"
 import { useState } from "react"
+import Link from "next/link"
 
 interface Punishment {
   id: number
@@ -106,6 +107,21 @@ export function PunishmentsTable({
     }
   }
 
+  const UserLink = ({ username }: { username: string }) => {
+    if (username.toLowerCase() === 'console') {
+      return <span>{username}</span>
+    }
+    
+    return (
+      <Link 
+        href={`/profile/${username}`}
+        className="text-primary hover:underline"
+      >
+        {username}
+      </Link>
+    )
+  }
+
   return (
     <Card className="p-4">
       <Table>
@@ -124,8 +140,12 @@ export function PunishmentsTable({
         <TableBody>
           {data?.items.map((punishment: Punishment) => (
             <TableRow key={punishment.id}>
-              <TableCell>{punishment.player_name}</TableCell>
-              <TableCell>{punishment.banned_by_name}</TableCell>
+              <TableCell>
+                <UserLink username={punishment.player_name} />
+              </TableCell>
+              <TableCell>
+                <UserLink username={punishment.banned_by_name} />
+              </TableCell>
               <TableCell>{punishment.reason}</TableCell>
               <TableCell>{formatDate(punishment.time)}</TableCell>
               {type !== "kicks" && (
@@ -142,7 +162,9 @@ export function PunishmentsTable({
                     })()}
                   </TableCell>
                   <TableCell>
-                    {punishment.removed_by_name || '-'}
+                    {punishment.removed_by_name ? (
+                      <UserLink username={punishment.removed_by_name} />
+                    ) : '-'}
                   </TableCell>
                   <TableCell>
                     {punishment.removed_by_reason || '-'}
