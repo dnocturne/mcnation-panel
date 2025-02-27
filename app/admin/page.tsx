@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { withAuth } from "@/components/protected-route"
 import { useRouter } from "next/navigation"
 import { usePermission } from "@/hooks/use-permissions"
+import { useAuth } from "@/lib/auth-store"
 
 interface ServerStatus {
   onlinePlayers: number;
@@ -83,7 +84,8 @@ const AdminPage = () => {
   const [command, setCommand] = useState("");
   const { toast } = useToast();
   const router = useRouter()
-  const { data: hasDashboardAccess, isLoading } = usePermission('panel.dashboard')
+  const { isAuthenticated } = useAuth()
+  const { data: hasDashboardAccess, isLoading: permissionLoading } = usePermission('panel.dashboard')
 
   useEffect(() => {
     setIsMounted(true)
@@ -93,10 +95,11 @@ const AdminPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!isLoading && hasDashboardAccess === false) {
+    if (isMounted && !permissionLoading && hasDashboardAccess === false) {
+      console.log('No dashboard access, redirecting from admin page')
       router.push('/')
     }
-  }, [hasDashboardAccess, isLoading, router])
+  }, [hasDashboardAccess, permissionLoading, router, isMounted])
 
   const { data: serverStatus, error, isLoading: serverStatusLoading } = useQuery<ServerStatus>({
     queryKey: ['serverStatus', config],
@@ -105,7 +108,7 @@ const AdminPage = () => {
     refetchInterval: 5000,
   });
 
-  if (!isMounted || isLoading || !hasDashboardAccess) return null
+  if (!isMounted || permissionLoading || !hasDashboardAccess) return null
 
   const StatusSkeleton = () => (
     <div className="grid gap-6 md:grid-cols-3">

@@ -7,6 +7,12 @@ interface Permission {
 }
 
 export async function getUserPermissions(username: string): Promise<Permission[]> {
+  // Add validation to ensure username is defined
+  if (!username) {
+    console.error('getUserPermissions called with undefined username')
+    return []
+  }
+  
   try {
     // First get user's groups
     const groupQuery = `
@@ -46,6 +52,12 @@ export async function getUserPermissions(username: string): Promise<Permission[]
 }
 
 export async function hasPermission(username: string, requiredPermission: string): Promise<boolean> {
+  // Add validation to ensure parameters are defined
+  if (!username || !requiredPermission) {
+    console.error('hasPermission called with undefined parameters:', { username, requiredPermission })
+    return false
+  }
+
   const permissions = await getUserPermissions(username)
   
   // Check if any of the user's groups has the required permission with value = 1

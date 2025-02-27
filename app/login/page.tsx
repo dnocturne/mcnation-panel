@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-store"
 import type { AuthState } from "@/lib/auth-store"
+import { jwtVerify } from 'jose'
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -37,9 +38,36 @@ export default function LoginPage() {
         throw new Error(data.message || "Login failed")
       }
 
-      setToken(data.token, data.username)
-      router.push("/")
+      // Decode the token to get the expiration time
+      const token = data.token
+      try {
+        // We're just decoding here (not verifying)
+        const tokenData = JSON.parse(atob(token.split('.')[1]))
+        const expiryTime = tokenData.exp * 1000 // Convert to milliseconds
+        
+        // Get username from token if available, otherwise use the one from API response
+        const usernameFromToken = tokenData.username || tokenData.sub
+        const finalUsername = usernameFromToken || data.username
+        
+        console.log("Login successful, token data:", {
+          username: finalUsername,
+          expiryTime: new Date(expiryTime).toISOString()
+        })
+        
+        setToken(token, finalUsername, expiryTime)
+        
+        console.log("Redirecting to home page")
+        router.push("/")
+      } catch (error) {
+        console.error("Token decode error:", error)
+        toast({
+          title: "Error",
+          description: "Failed to process authentication token",
+          variant: "destructive",
+        })
+      }
     } catch (error) {
+      console.error("Login error:", error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Login failed",

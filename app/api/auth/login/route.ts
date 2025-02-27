@@ -42,12 +42,26 @@ export async function POST(request: Request) {
       )
     }
 
-    const token = await new SignJWT({ username })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('24h')
-      .sign(JWT_SECRET)
+    // Log the username to verify it exists
+    console.log('Creating token with username:', user.last_nickname)
 
-    return NextResponse.json({ token, username })
+    // Create JWT with username explicitly set as a claim
+    const token = await new SignJWT({ 
+      username: user.last_nickname,
+      // Adding a unique subject helps ensure the claim isn't stripped
+      sub: user.last_nickname 
+    })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setExpirationTime('1h')
+      .setIssuedAt()
+      .sign(JWT_SECRET)
+    
+    // Log the token payload for debugging
+    const [_header, payload] = token.split('.')
+    const decodedPayload = Buffer.from(payload, 'base64').toString()
+    console.log('Token payload:', decodedPayload)
+
+    return NextResponse.json({ token, username: user.last_nickname })
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(

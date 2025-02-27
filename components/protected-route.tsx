@@ -7,18 +7,31 @@ import { useEffect, useState } from "react"
 export function withAuth<P extends object>(Component: React.ComponentType<P>) {
   return function ProtectedRoute(props: P) {
     const [isMounted, setIsMounted] = useState(false)
-    const isAuthenticated = useAuth((state) => state.isAuthenticated)
+    const { isAuthenticated } = useAuth()
     const router = useRouter()
 
     useEffect(() => {
       setIsMounted(true)
-      if (!isAuthenticated()) {
-        router.replace("/login")
-      }
-    }, [router])
+    }, [])
 
-    if (!isMounted || !isAuthenticated()) {
-      return null // Return loading state or null until mounted
+    useEffect(() => {
+      if (isMounted) {
+        const authStatus = isAuthenticated()
+        console.log('Protected route auth status:', authStatus)
+        
+        if (!authStatus) {
+          console.log('Redirecting to login from protected route')
+          router.replace("/login")
+        }
+      }
+    }, [isMounted, isAuthenticated, router])
+
+    if (!isMounted) {
+      return null // Return loading state until mounted
+    }
+
+    if (!isAuthenticated()) {
+      return null // User not authenticated
     }
 
     return <Component {...props} />

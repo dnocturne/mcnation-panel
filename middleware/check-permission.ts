@@ -16,7 +16,23 @@ export async function checkPermission(
 
     const token = authHeader.split(' ')[1]
     const { payload } = await jwtVerify(token, JWT_SECRET)
-    const username = (payload as any).username
+    
+    // Log the full payload for debugging
+    console.log('JWT payload:', JSON.stringify(payload))
+    
+    // Try to get username from multiple possible claims
+    let username = (payload as any).username
+    
+    // If username is not found, try the subject claim which should match the username
+    if (!username && (payload as any).sub) {
+      username = (payload as any).sub
+      console.log('Using subject claim as username:', username)
+    }
+
+    if (!username) {
+      console.error('Username missing in JWT payload:', payload)
+      return false
+    }
 
     return await hasPermission(username, requiredPermission)
   } catch (error) {
