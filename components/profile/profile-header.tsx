@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { AvatarUpload } from "@/components/avatar-upload"
 import { UserProfile } from "@/types/user"
+import { AdminActions } from "./admin-actions"
 
 interface ProfileHeaderProps {
   username: string
@@ -34,6 +35,11 @@ export function ProfileHeader({ username, isOwnProfile, userProfile, onlineStatu
             <OnlineStatus type="web" isOnline={onlineStatus?.isOnlineWeb} />
             <OnlineStatus type="server" isOnline={onlineStatus?.isOnlineServer} />
           </div>
+          {!isOwnProfile && (
+            <div className="mt-4">
+              <AdminActions username={username} />
+            </div>
+          )}
         </div>
       </div>
     </div>

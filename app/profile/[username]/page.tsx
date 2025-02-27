@@ -7,7 +7,6 @@ import { useQuery, useQueries } from "@tanstack/react-query"
 import { ProfileHeader } from "@/components/profile/profile-header"
 import { PunishmentHistory } from "@/components/profile/punishment-history"
 import { UserProfile, PunishmentStats } from "@/types/user"
-import { PunishmentStats as PunishmentStatsComponent } from "@/components/profile/punishment-stats"
 import { GameplayStats } from "@/components/profile/gameplay-stats"
 import { SkinViewer } from "@/components/profile/skin-viewer"
 
