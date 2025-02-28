@@ -4,6 +4,7 @@ import LayoutWrapper from "./layout-wrapper";
 import type { Metadata } from "next";
 import { GeistSans } from "geist/font";
 import { StoreNavigation } from "@/components/store-navigation";
+import Providers from './providers'
 
 export { metadata };
 
@@ -14,11 +15,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head />
       <body className={GeistSans.className} suppressHydrationWarning>
-        <LayoutWrapper>
-          {children}
-          <StoreNavigation />
-        </LayoutWrapper>
+        <Providers>
+          <LayoutWrapper>
+            {children}
+            <StoreNavigation />
+          </LayoutWrapper>
+        </Providers>
       </body>
     </html>
   );

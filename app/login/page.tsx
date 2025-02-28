@@ -1,78 +1,48 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { NavigationMenuDemo } from "@/components/navbar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { useAuth } from "@/lib/auth-store"
-import type { AuthState } from "@/lib/auth-store"
-import { jwtVerify } from 'jose'
+import { AlertCircle } from "lucide-react"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
   const router = useRouter()
-  const setToken = useAuth((state: AuthState) => state.setToken)
+  const searchParams = useSearchParams()
+  const redirectPath = searchParams.get("redirect") || "/"
+  const { login } = useAuth()
 
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault()
     setIsLoading(true)
+    setError(null)
 
     try {
-      const requestData = { username, password };
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestData),
+      const result = await login(username, password, redirectPath)
+
+      if (!result.success) {
+        setError(result.error || "Invalid username or password")
+        setIsLoading(false)
+        return
+      }
+
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
       })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed")
-      }
-
-      // Decode the token to get the expiration time
-      const token = data.token
-      try {
-        // We're just decoding here (not verifying)
-        const tokenData = JSON.parse(atob(token.split('.')[1]))
-        const expiryTime = tokenData.exp * 1000 // Convert to milliseconds
-        
-        // Get username from token if available, otherwise use the one from API response
-        const usernameFromToken = tokenData.username || tokenData.sub
-        const finalUsername = usernameFromToken || data.username
-        
-        console.log("Login successful, token data:", {
-          username: finalUsername,
-          expiryTime: new Date(expiryTime).toISOString()
-        })
-        
-        setToken(token, finalUsername, expiryTime)
-        
-        console.log("Redirecting to home page")
-        router.push("/")
-      } catch (error) {
-        console.error("Token decode error:", error)
-        toast({
-          title: "Error",
-          description: "Failed to process authentication token",
-          variant: "destructive",
-        })
-      }
     } catch (error) {
       console.error("Login error:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Login failed",
-        variant: "destructive",
-      })
+      setError("An unexpected error occurred. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -112,6 +82,15 @@ export default function LoginPage() {
                   required
                 />
               </div>
+              
+              {error && (
+                <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <p>{error}</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
             <CardFooter>
               <Button 

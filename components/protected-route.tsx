@@ -1,13 +1,14 @@
 "use client"
 
-import { useAuth } from "@/lib/auth-store"
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
 
 export function withAuth<P extends object>(Component: React.ComponentType<P>) {
   return function ProtectedRoute(props: P) {
     const [isMounted, setIsMounted] = useState(false)
-    const { isAuthenticated } = useAuth()
+    const { status } = useSession()
     const router = useRouter()
 
     useEffect(() => {
@@ -15,22 +16,21 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
     }, [])
 
     useEffect(() => {
-      if (isMounted) {
-        const authStatus = isAuthenticated()
-        console.log('Protected route auth status:', authStatus)
-        
-        if (!authStatus) {
-          console.log('Redirecting to login from protected route')
-          router.replace("/login")
-        }
+      if (isMounted && status === "unauthenticated") {
+        console.log('Redirecting to login from protected route')
+        router.replace("/login?redirect=" + encodeURIComponent(window.location.pathname))
       }
-    }, [isMounted, isAuthenticated, router])
+    }, [isMounted, status, router])
 
-    if (!isMounted) {
-      return null // Return loading state until mounted
+    if (!isMounted || status === "loading") {
+      return (
+        <div className="flex justify-center items-center h-48">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      )
     }
 
-    if (!isAuthenticated()) {
+    if (status === "unauthenticated") {
       return null // User not authenticated
     }
 

@@ -5,7 +5,6 @@ import { ShoppingCart, Menu, Search, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { useAuth } from "@/lib/auth-store"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useEffect, useState } from "react"
@@ -27,16 +26,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function StoreLayoutClient({ children }: { children: React.ReactNode }) {
-  const { username, logout, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, logout } = useAuth()
+  const username = user?.name
   const router = useRouter()
   const { data: hasAdminPermission } = usePermission('panel.webstore')
   const [cartCount, setCartCount] = useState(0)
   
   // Fetch cart count
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (isAuthenticated) {
       // Example - replace with actual cart API
       fetch('/api/webstore/cart/count')
         .then(res => res.ok ? res.json() : { count: 0 })
@@ -56,6 +57,11 @@ export default function StoreLayoutClient({ children }: { children: React.ReactN
     },
     enabled: !!username
   })
+
+  // Update the logout handler
+  const handleLogout = () => {
+    logout("/login")
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
@@ -229,10 +235,7 @@ export default function StoreLayoutClient({ children }: { children: React.ReactN
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="cursor-pointer"
-                      onClick={() => {
-                        logout()
-                        router.push("/login")
-                      }}
+                      onClick={handleLogout}
                     >
                       Logout
                     </DropdownMenuItem>

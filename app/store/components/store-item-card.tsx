@@ -6,18 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatCurrency } from "@/lib/utils"
-
-interface StoreItem {
-  id: number
-  name: string
-  description: string
-  price: number
-  sale_price: number | null
-  category_id: number | null
-  image_url: string | null
-  active: boolean
-  category_name?: string
-}
+import { StoreItem } from "@/lib/types/store"
 
 interface StoreItemCardProps {
   item: StoreItem

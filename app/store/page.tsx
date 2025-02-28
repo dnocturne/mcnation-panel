@@ -4,20 +4,21 @@ import Link from "next/link"
 import { StoreProvider } from "./store-context"
 import { Button } from "@/components/ui/button"
 import { StoreItemCard } from "./components/store-item-card"
-import { getItems, ensureWebstoreTables } from "@/lib/database/webstore"
+import { getStoreItems } from "@/lib/services/store-service"
+import { StoreItem } from "@/lib/types/store"
 
 export const metadata: Metadata = {
   title: "MCNation Store",
   description: "Browse and purchase items for your Minecraft experience on MCNation",
 }
 
-async function getStoreItems() {
+/**
+ * Fetch store items for the store page
+ */
+async function fetchStoreItems(): Promise<StoreItem[]> {
   try {
-    // Ensure tables are created
-    await ensureWebstoreTables()
-    
-    // Directly get items from the database
-    const items = await getItems(true) // Only active items
+    // Get active items from the store service
+    const items = await getStoreItems(true)
     return items
   } catch (error) {
     console.error('Error fetching store items:', error)
@@ -26,8 +27,8 @@ async function getStoreItems() {
 }
 
 export default async function StorePage() {
-  const items = await getStoreItems()
-  const featuredItems = items.filter((item: any) => item.active).slice(0, 6)
+  const items = await fetchStoreItems()
+  const featuredItems = items.slice(0, 6)
   
   return (
     <StoreProvider>
@@ -75,7 +76,7 @@ export default async function StorePage() {
           </div>
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
-            {featuredItems.map((item: any) => (
+            {featuredItems.map((item) => (
               <StoreItemCard key={item.id} item={item} showCategory />
             ))}
           </div>

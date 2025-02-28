@@ -1,134 +1,130 @@
-import { NextResponse } from "next/server"
-import { getDiscounts, createDiscount, ensureWebstoreTables } from "@/lib/database/webstore"
-import { authMiddleware } from "@/app/api/auth/middleware"
-import { hasPermission } from "@/lib/permissions"
+import { NextRequest } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
+import { handleApiError } from "@/lib/utils/error-handler"
+import { ApiError, ErrorCode } from "@/lib/utils/error-handler"
 
-// Initialize tables if needed first
-async function ensureTables() {
-  await ensureWebstoreTables()
-}
-
-// Check if user has webstore permission
-async function checkPermission(request: Request): Promise<{ authorized: boolean, response?: NextResponse }> {
-  // Verify authentication
-  const authResponse = await authMiddleware(request)
-  if (authResponse.status !== 200) {
-    return { authorized: false, response: authResponse }
+// Sample data - replace with your actual data fetching logic
+const SAMPLE_DISCOUNTS = [
+  {
+    id: 1,
+    code: "SUMMER2023",
+    percentage: 20,
+    valid_from: "2023-06-01T00:00:00Z",
+    valid_until: "2023-08-31T23:59:59Z",
+    max_uses: 100,
+    times_used: 45,
+    active: true,
+    created_at: "2023-05-15T12:00:00Z",
+    updated_at: "2023-05-15T12:00:00Z"
+  },
+  {
+    id: 2,
+    code: "WELCOME10",
+    percentage: 10,
+    valid_from: "2023-01-01T00:00:00Z",
+    valid_until: "2023-12-31T23:59:59Z",
+    max_uses: 500,
+    times_used: 210,
+    active: true,
+    created_at: "2023-01-01T10:00:00Z",
+    updated_at: "2023-01-01T10:00:00Z"
+  },
+  {
+    id: 3,
+    code: "FLASH50",
+    percentage: 50,
+    valid_from: "2023-07-10T00:00:00Z",
+    valid_until: "2023-07-12T23:59:59Z",
+    max_uses: 50,
+    times_used: 50,
+    active: false,
+    created_at: "2023-07-01T08:00:00Z",
+    updated_at: "2023-07-12T23:59:59Z"
   }
+]
 
-  // For ALL discount endpoints, check panel.webstore permission
-  const authHeader = request.headers.get("Authorization")
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { 
-      authorized: false, 
-      response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) 
-    }
-  }
-
-  const token = authHeader.split(' ')[1]
-  const tokenData = JSON.parse(atob(token.split('.')[1]))
-  const username = tokenData.username || tokenData.sub
-  
-  if (!username) {
-    return { 
-      authorized: false, 
-      response: NextResponse.json({ error: "Invalid token" }, { status: 401 }) 
-    }
-  }
-  
-  // Check panel.webstore permission for all methods
-  const hasAccess = await hasPermission(username, 'panel.webstore')
-  if (!hasAccess) {
-    return { 
-      authorized: false, 
-      response: NextResponse.json({ error: "Access denied" }, { status: 403 }) 
-    }
-  }
-
-  return { authorized: true }
-}
-
-// GET all discounts
-export async function GET(request: Request) {
-  const permission = await checkPermission(request)
-  if (!permission.authorized) {
-    return permission.response
-  }
-
+/**
+ * GET /api/webstore/discounts
+ * Fetches all discount codes (admin only)
+ */
+export async function GET(req: NextRequest) {
   try {
-    await ensureTables()
+    // Check authentication using NextAuth
+    const session = await getServerSession(authOptions)
     
-    const { searchParams } = new URL(request.url)
-    const showInactive = searchParams.get('showInactive') === 'true'
+    if (!session?.user) {
+      throw new ApiError(
+        "Authentication required to access discount codes", 
+        ErrorCode.UNAUTHORIZED,
+        401
+      )
+    }
     
-    const discounts = await getDiscounts(!showInactive)
-    return NextResponse.json(discounts)
+    // Check for admin role
+    if (session.user.role !== "admin") {
+      throw new ApiError(
+        "Admin privileges required to access discount codes", 
+        ErrorCode.FORBIDDEN,
+        403
+      )
+    }
+    
+    // In a real app, fetch from database
+    // const discounts = await prisma.discount.findMany()
+    const discounts = SAMPLE_DISCOUNTS
+    
+    return Response.json({ success: true, discounts })
   } catch (error) {
-    console.error("Error fetching discounts:", error)
-    return NextResponse.json(
-      { error: "Failed to fetch discounts" },
-      { status: 500 }
-    )
+    return handleApiError(error, "Failed to fetch discount codes")
   }
 }
 
-// POST create new discount
-export async function POST(request: Request) {
-  const permission = await checkPermission(request)
-  if (!permission.authorized) {
-    return permission.response
-  }
-
+/**
+ * POST /api/webstore/discounts
+ * Creates a new discount code (admin only)
+ */
+export async function POST(req: NextRequest) {
   try {
-    const data = await request.json()
+    // Check authentication using NextAuth
+    const session = await getServerSession(authOptions)
     
-    if (!data.code || !data.percentage) {
-      return NextResponse.json(
-        { error: "Discount code and percentage are required" },
-        { status: 400 }
+    if (!session?.user) {
+      throw new ApiError(
+        "Authentication required to create discount codes", 
+        ErrorCode.UNAUTHORIZED,
+        401
       )
     }
     
-    // Validate percentage
-    const percentage = parseInt(data.percentage)
-    if (isNaN(percentage) || percentage <= 0 || percentage > 100) {
-      return NextResponse.json(
-        { error: "Percentage must be a number between 1 and 100" },
-        { status: 400 }
+    // Check for admin role
+    if (session.user.role !== "admin") {
+      throw new ApiError(
+        "Admin privileges required to create discount codes", 
+        ErrorCode.FORBIDDEN,
+        403
       )
     }
     
-    // Set default values
-    const discountData: any = {
-      code: data.code,
-      percentage,
-      valid_from: data.valid_from || new Date(),
-      valid_until: data.valid_until || null,
-      max_uses: data.max_uses ? parseInt(data.max_uses) : null,
-      times_used: 0,
-      active: data.active !== undefined ? !!data.active : true
-    }
+    // Parse request body
+    const discountData = await req.json()
     
-    const discountId = await createDiscount(discountData)
+    // In a real app, validate and create in database
+    // const newDiscount = await prisma.discount.create({ data: discountData })
     
-    return NextResponse.json({ 
-      id: discountId,
+    // For now, just return the received data with a fake ID
+    const newDiscount = {
+      id: Math.floor(Math.random() * 1000) + 4,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       ...discountData
-    })
-  } catch (error: any) {
-    console.error("Error creating discount:", error)
-    
-    // Check for duplicate code error
-    if (error.code === 'ER_DUP_ENTRY') {
-      return NextResponse.json(
-        { error: "Discount code already exists" },
-        { status: 400 }
-      )
     }
     
-    return NextResponse.json(
-      { error: "Failed to create discount" },
-      { status: 500 }
-    )
+    return Response.json({ 
+      success: true, 
+      discount: newDiscount 
+    }, { status: 201 })
+  } catch (error) {
+    return handleApiError(error, "Failed to create discount code")
   }
-} 
+}

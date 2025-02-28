@@ -1,38 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from "react"
-
-interface StoreItem {
-  id: number
-  name: string
-  description: string
-  price: number
-  sale_price: number | null
-  category_id: number | null
-  image_url: string | null
-  active: boolean
-}
-
-interface CartItem {
-  item: StoreItem
-  quantity: number
-  paymentMethodId: number | null
-  discountCode?: string
-}
-
-interface StoreContextType {
-  cartItems: CartItem[]
-  addToCart: (item: StoreItem, paymentMethodId: number) => void
-  removeFromCart: (itemId: number) => void
-  updateCartItemQuantity: (itemId: number, quantity: number) => void
-  updateCartItemPaymentMethod: (itemId: number, paymentMethodId: number) => void
-  applyDiscountCode: (itemId: number, code: string) => void
-  clearCart: () => void
-  cartTotal: number
-  cartCount: number
-  minecraftUsername: string
-  setMinecraftUsername: (username: string) => void
-}
+import { StoreItem, CartItem, StoreContext as StoreContextType } from "@/lib/types/store"
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined)
 

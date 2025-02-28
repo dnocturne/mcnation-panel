@@ -2,8 +2,9 @@
 
 import { usePermission } from "@/hooks/use-permissions"
 import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
 import { useEffect } from "react"
+import { AdminVerificationWrapper } from "@/components/admin-verification-wrapper"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 export function StoreAdminClient({ children }: { children: React.ReactNode }) {
   const { data: hasPermission, isLoading } = usePermission('panel.webstore')
@@ -16,20 +17,16 @@ export function StoreAdminClient({ children }: { children: React.ReactNode }) {
   }, [hasPermission, isLoading, router])
   
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <LoadingSpinner text="Checking store permissions..." />
   }
   
   if (!hasPermission) {
-    return (
-      <div className="flex justify-center items-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <LoadingSpinner text="Access denied. Redirecting..." />
   }
   
-  return <>{children}</>
+  return (
+    <AdminVerificationWrapper>
+      {children}
+    </AdminVerificationWrapper>
+  )
 } 
