@@ -20,9 +20,8 @@ export default function LayoutWrapper({
   children: React.ReactNode
 }) {
   return (
-    <body
+    <div
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      suppressHydrationWarning
     >
       <ThemeProvider
         attribute="class"
@@ -32,6 +31,6 @@ export default function LayoutWrapper({
       >
         <Providers>{children}</Providers>
       </ThemeProvider>
-    </body>
+    </div>
   );
 }

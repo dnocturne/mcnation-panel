@@ -30,7 +30,11 @@ export function usePermission(permission: string) {
         }
       })
       
-      if (!response.ok) return false
+      if (!response.ok) {
+        console.warn(`Permission check API error for ${permission}: ${response.status}`)
+        return false
+      }
+      
       const data = await response.json()
       return data.hasPermission
     },
