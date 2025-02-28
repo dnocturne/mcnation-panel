@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-store"
+import { useSession } from "next-auth/react"
 import Link from "next/link"
 import Image from "next/image"
 import { PlusCircle, Edit, Trash2, Eye, EyeOff } from "lucide-react"
@@ -72,7 +72,7 @@ interface Category {
 
 export function StoreItemsList() {
   const router = useRouter()
-  const { token } = useAuth()
+  const { data: session } = useSession()
   const [items, setItems] = useState<StoreItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -96,11 +96,7 @@ export function StoreItemsList() {
           url += `&category=${filterCategory}`
         }
         
-        const itemsRes = await fetch(url, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
+        const itemsRes = await fetch(url)
         
         if (!itemsRes.ok) {
           throw new Error('Failed to fetch items')
@@ -121,7 +117,7 @@ export function StoreItemsList() {
     }
     
     fetchData()
-  }, [token, showInactive, filterCategory])
+  }, [showInactive, filterCategory])
   
   // Handle toggling item active status
   const toggleItemActive = async (item: StoreItem) => {
@@ -130,7 +126,6 @@ export function StoreItemsList() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           active: !item.active
@@ -172,9 +167,6 @@ export function StoreItemsList() {
     try {
       const response = await fetch(`/api/webstore/items/${deleteItemId}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
       })
       
       if (!response.ok) {

@@ -1,29 +1,22 @@
 import { NextResponse } from "next/server"
 import { pool } from "@/lib/db"
 import { RowDataPacket } from "mysql2"
-import { jwtVerify } from "jose"
+import { getServerSession } from "next-auth"
 import { onlineUsersStore } from "@/lib/online-users-store"
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key')
+import { authOptions } from "@/lib/auth"
 
 export async function GET(
   request: Request,
   { params }: { params: { username: string } }
 ) {
   const { username } = params
-  const authHeader = request.headers.get("Authorization")
-
+  
+  // Get the NextAuth session
+  const session = await getServerSession(authOptions)
+  
   // Update last activity if user is authenticated
-  if (authHeader?.startsWith('Bearer ')) {
-    try {
-      const token = authHeader.split(' ')[1]
-      const { payload } = await jwtVerify(token, JWT_SECRET)
-      if ((payload as any).username) {
-        onlineUsersStore.updateActivity((payload as any).username)
-      }
-    } catch (error) {
-      console.error('Token verification error:', error)
-    }
+  if (session?.user?.name) {
+    onlineUsersStore.updateActivity(session.user.name)
   }
 
   try {

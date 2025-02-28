@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/lib/auth-store"
+import { useSession } from "next-auth/react"
 import { NavigationMenuDemo } from "@/components/navbar"
 import { useParams } from "next/navigation"
 import { useQuery, useQueries } from "@tanstack/react-query"
@@ -13,7 +13,8 @@ import { SkinViewer } from "@/components/profile/skin-viewer"
 export default function ProfilePage() {
   const params = useParams()
   const username = params.username as string
-  const loggedInUser = useAuth((state) => state.username)
+  const { data: session } = useSession()
+  const loggedInUser = session?.user?.name
   const isOwnProfile = username === loggedInUser
 
   const { data: userProfile, isLoading: profileLoading } = useQuery<UserProfile>({
@@ -28,12 +29,7 @@ export default function ProfilePage() {
   const { data: onlineStatus } = useQuery({
     queryKey: ["onlineStatus", username],
     queryFn: async () => {
-      const token = useAuth.getState().token
-      const response = await fetch(`/api/users/${username}/online`, {
-        headers: token ? {
-          Authorization: `Bearer ${token}`
-        } : {}
-      })
+      const response = await fetch(`/api/users/${username}/online`)
       if (!response.ok) throw new Error("Failed to fetch online status")
       return response.json()
     },

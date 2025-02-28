@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
-import { useAuth } from "@/lib/auth-store"
+import { useSession } from "next-auth/react"
 
 interface AdminActionsProps {
   username: string
@@ -31,7 +31,7 @@ function ActionDialog({ username, actionType, isOpen, onClose }: ActionDialogPro
   const [reason, setReason] = useState("")
   const [duration, setDuration] = useState("")
   const { toast } = useToast()
-  const { token } = useAuth()
+  const { data: session } = useSession()
 
   const handleAction = async () => {
     if (!reason) {
@@ -73,7 +73,6 @@ function ActionDialog({ username, actionType, isOpen, onClose }: ActionDialogPro
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ command })
       })

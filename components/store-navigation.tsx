@@ -1,11 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { ShoppingBag, Settings, ShoppingCart } from "lucide-react"
+import { ShoppingBag, Settings, ShoppingCart, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { usePermission } from "@/hooks/use-permissions"
-import { useAuth } from "@/lib/auth-store"
+import { useSession } from "next-auth/react"
 import { useEffect, useState } from "react"
 import { 
   Tooltip,
@@ -16,19 +16,22 @@ import {
 
 export function StoreNavigation() {
   const { data: hasAdminPermission } = usePermission('panel.webstore')
-  const { isAuthenticated } = useAuth()
+  const { data: session, status } = useSession()
   const [cartCount, setCartCount] = useState(0)
+  
+  // Check auth state from NextAuth
+  const isLoggedIn = status === "authenticated"
   
   // Fetch cart count if authenticated
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (isLoggedIn) {
       // Example - replace with actual cart API
       fetch('/api/webstore/cart/count')
         .then(res => res.ok ? res.json() : { count: 0 })
         .then(data => setCartCount(data.count))
         .catch(() => setCartCount(0))
     }
-  }, [isAuthenticated])
+  }, [isLoggedIn])
   
   return (
     <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
@@ -51,6 +54,24 @@ export function StoreNavigation() {
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+      
+      {/* Show profile button if logged in */}
+      {isLoggedIn && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button asChild size="icon" variant="secondary" className="rounded-full shadow-lg">
+                <Link href="/profile" title="My Profile">
+                  <User className="h-5 w-5" />
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              <p>My Profile{session?.user?.name ? ` (${session.user.name})` : ''}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
       
       {hasAdminPermission && (
         <TooltipProvider>

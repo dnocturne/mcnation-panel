@@ -5,7 +5,7 @@ import Link from "next/link"
 import { useTheme } from "next-themes"
 import { Moon, Sun, User } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-store"
+import { useSession, signOut } from "next-auth/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useState, useEffect } from "react"
 import fs from "fs"
@@ -39,7 +39,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function NavigationMenuDemo() {
-  const { username, logout } = useAuth()
+  const { data: session, status } = useSession()
+  const username = session?.user?.name
   const { setTheme, theme } = useTheme()
   const router = useRouter()
   const { data: hasDashboardAccess, isLoading } = usePermission('panel.dashboard')
@@ -56,6 +57,11 @@ export function NavigationMenuDemo() {
   })
 
   const handleLoginRedirect = () => {
+    router.push("/login")
+  }
+  
+  const handleLogout = async () => {
+    await signOut({ redirect: false })
     router.push("/login")
   }
 
@@ -123,7 +129,7 @@ export function NavigationMenuDemo() {
               </Tooltip>
             </TooltipProvider>
 
-            {username ? (
+            {status === "authenticated" && username ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -148,10 +154,7 @@ export function NavigationMenuDemo() {
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="cursor-pointer"
-                    onClick={() => {
-                      logout()
-                      router.push("/login")
-                    }}
+                    onClick={handleLogout}
                   >
                     Logout
                   </DropdownMenuItem>

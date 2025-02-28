@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { withAuth } from "@/components/protected-route"
 import { useRouter } from "next/navigation"
 import { usePermission } from "@/hooks/use-permissions"
-import { useAuth } from "@/lib/auth-store"
+import { useSession } from "next-auth/react"
 
 interface ServerStatus {
   onlinePlayers: number;
@@ -84,7 +84,8 @@ const AdminPage = () => {
   const [command, setCommand] = useState("");
   const { toast } = useToast();
   const router = useRouter()
-  const { isAuthenticated } = useAuth()
+  const { status } = useSession()
+  const isAuthenticated = status === "authenticated"
   const { data: hasDashboardAccess, isLoading: permissionLoading } = usePermission('panel.dashboard')
 
   useEffect(() => {
