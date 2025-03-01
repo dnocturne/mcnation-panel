@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { formatCurrency } from "@/lib/utils"
 import { MinusIcon, PlusIcon, TrashIcon } from "lucide-react"
+import { useStripeCheckout, CheckoutCartItem } from "@/lib/hooks/use-stripe-checkout"
+import { useToast } from "@/hooks/use-toast"
 
 export default function CartPage() {
   const { 
@@ -22,7 +24,8 @@ export default function CartPage() {
     setMinecraftUsername
   } = useStore()
   
-  const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const { createCheckoutSession, isLoading: checkoutLoading } = useStripeCheckout()
+  const { toast } = useToast()
   
   const handleQuantityChange = (itemId: number, newQuantity: number) => {
     updateCartItemQuantity(itemId, newQuantity)
@@ -34,25 +37,60 @@ export default function CartPage() {
   
   const handleCheckout = async () => {
     if (!minecraftUsername) {
-      alert("Please enter your Minecraft username")
+      toast({
+        title: "Missing Information",
+        description: "Please enter your Minecraft username",
+        variant: "destructive"
+      })
       return
     }
     
     if (cartItems.length === 0) {
-      alert("Your cart is empty")
+      toast({
+        title: "Empty Cart",
+        description: "Your cart is empty",
+        variant: "destructive"
+      })
       return
     }
     
-    setCheckoutLoading(true)
-    
     try {
-      // TODO: Implement checkout API call
-      alert("Checkout functionality will be implemented in the future")
+      // Format cart items for the checkout API with validated prices
+      const checkoutItems: CheckoutCartItem[] = cartItems.map(cartItem => {
+        // Determine the correct price, ensuring it's a valid number
+        let price = cartItem.item.price
+        if (cartItem.item.sale_price !== null && 
+            !isNaN(cartItem.item.sale_price) && 
+            cartItem.item.sale_price < cartItem.item.price) {
+          price = cartItem.item.sale_price
+        }
+        
+        // Ensure price is a valid number
+        if (isNaN(price) || price <= 0) {
+          console.error(`Invalid price for item ${cartItem.item.id}: ${price}`)
+          price = 0.99 // Set a default minimum price to prevent errors
+        }
+        
+        return {
+          id: cartItem.item.id,
+          name: cartItem.item.name,
+          price: price,
+          quantity: cartItem.quantity
+        }
+      })
+      
+      // Create checkout session and redirect to Stripe
+      await createCheckoutSession({
+        cartItems: checkoutItems,
+        minecraftUsername
+      })
     } catch (error) {
       console.error("Checkout error:", error)
-      alert("An error occurred during checkout. Please try again later.")
-    } finally {
-      setCheckoutLoading(false)
+      toast({
+        title: "Checkout Error",
+        description: "An error occurred during checkout. Please try again later.",
+        variant: "destructive"
+      })
     }
   }
   

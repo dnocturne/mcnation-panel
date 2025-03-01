@@ -1,6 +1,5 @@
 import { Metadata } from "next"
 import { StoreItemsClient } from "./page-client"
-import { StoreProvider } from "../store-context"
 
 export const metadata: Metadata = {
   title: "MCNation Store - Browse Items",
@@ -9,17 +8,15 @@ export const metadata: Metadata = {
 
 export default function StoreItemsPage() {
   return (
-    <StoreProvider>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Store Items</h1>
-          <p className="text-muted-foreground">
-            Browse our selection of items for your Minecraft experience
-          </p>
-        </div>
-        
-        <StoreItemsClient />
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Store Items</h1>
+        <p className="text-muted-foreground">
+          Browse our selection of items for your Minecraft experience
+        </p>
       </div>
-    </StoreProvider>
+      
+      <StoreItemsClient />
+    </div>
   )
 } 

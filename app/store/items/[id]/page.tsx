@@ -1,6 +1,5 @@
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { StoreProvider } from '@/app/store/store-context'
 import { StoreItemClient } from './page-client'
 import { getStoreItemById } from '@/lib/services/store-service'
 import { getPaymentMethods } from '@/lib/services/store-service'
@@ -57,29 +56,25 @@ export default async function StoreItemPage({ params }: { params: { id: string }
     const paymentMethods = await getPaymentMethods()
     
     return (
-      <StoreProvider>
-        <div className="space-y-6">
-          <StoreItemClient 
-            itemId={id} 
-            paymentMethods={paymentMethods.map(pm => ({
-              id: pm.id,
-              name: pm.name
-            }))}
-          />
-        </div>
-      </StoreProvider>
+      <div className="space-y-6">
+        <StoreItemClient 
+          itemId={id} 
+          paymentMethods={paymentMethods.map(pm => ({
+            id: pm.id,
+            name: pm.name
+          }))}
+        />
+      </div>
     )
   } catch (error) {
     // If we have an error fetching the item, let the client component handle it
     return (
-      <StoreProvider>
-        <div className="space-y-6">
-          <StoreItemClient 
-            itemId={id}
-            paymentMethods={[]}
-          />
-        </div>
-      </StoreProvider>
+      <div className="space-y-6">
+        <StoreItemClient 
+          itemId={id}
+          paymentMethods={[]}
+        />
+      </div>
     )
   }
 } 

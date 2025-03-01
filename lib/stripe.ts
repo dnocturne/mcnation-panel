@@ -1,13 +1,17 @@
 import Stripe from 'stripe';
+import { stripe as stripeEnv, isProd } from './env';
 
 // Initialize Stripe with the appropriate secret key
 export const stripe = new Stripe(
-  process.env.STRIPE_SECRET_KEY || '',
+  stripeEnv.getSecretKey(),
   {
     apiVersion: '2025-02-24.acacia', // Use the latest API version
     typescript: true,
   }
 );
+
+// Get the publishable key for client-side usage
+export const stripePublishableKey = stripeEnv.getPublishableKey();
 
 // Allowed event types for webhook processing
 export const allowedEvents: Stripe.Event.Type[] = [
@@ -17,16 +21,16 @@ export const allowedEvents: Stripe.Event.Type[] = [
   "payment_intent.canceled",
 ];
 
-// Check if we're in a production environment
-export const isProd = process.env.NODE_ENV === 'production';
+// Export isProd from the env file for convenience
+export { isProd } from './env';
 
 /**
- * Type for storing payment information from Stripe in KV store
+ * Type for storing payment information from Stripe in Redis
  */
 export type STRIPE_PAYMENT_CACHE = 
   | {
       paymentIntentId: string;
-      status: 'succeeded' | 'processing' | 'requires_payment_method' | 'requires_confirmation' | 'requires_action' | 'canceled';
+      status: 'succeeded' | 'processing' | 'requires_payment_method' | 'requires_confirmation' | 'requires_action' | 'canceled' | 'requires_capture' | string;
       amount: number;
       currency: string;
       paymentMethod?: {
@@ -37,5 +41,5 @@ export type STRIPE_PAYMENT_CACHE =
       createdAt: number;
     } 
   | {
-      status: "none";
+      status: "none" | string;
     }; 

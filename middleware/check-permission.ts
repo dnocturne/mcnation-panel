@@ -1,39 +1,29 @@
-import { NextResponse } from "next/server"
-import { jwtVerify } from "jose"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { hasPermission } from "@/lib/permissions"
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key')
 
 export async function checkPermission(
   request: Request,
   requiredPermission: string
 ) {
   try {
-    const authHeader = request.headers.get("Authorization")
-    if (!authHeader?.startsWith('Bearer ')) {
+    // Get session from NextAuth instead of JWT token
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user) {
+      console.log('No authenticated user found')
       return false
     }
-
-    const token = authHeader.split(' ')[1]
-    const { payload } = await jwtVerify(token, JWT_SECRET)
     
-    // Log the full payload for debugging
-    console.log('JWT payload:', JSON.stringify(payload))
+    // Get username from NextAuth session
+    const username = session.user.name
     
-    // Try to get username from multiple possible claims
-    let username = (payload as any).username
-    
-    // If username is not found, try the subject claim which should match the username
-    if (!username && (payload as any).sub) {
-      username = (payload as any).sub
-      console.log('Using subject claim as username:', username)
-    }
-
     if (!username) {
-      console.error('Username missing in JWT payload:', payload)
+      console.error('Username missing in session:', session)
       return false
     }
-
+    
+    console.log(`Checking permission ${requiredPermission} for user ${username}`)
     return await hasPermission(username, requiredPermission)
   } catch (error) {
     console.error('Permission check error:', error)

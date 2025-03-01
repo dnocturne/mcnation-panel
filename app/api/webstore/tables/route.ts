@@ -1,34 +1,33 @@
 import { NextResponse } from "next/server"
 import { ensureWebstoreTables } from "@/lib/database/webstore"
-import { authMiddleware } from "@/app/api/auth/middleware"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { hasPermission } from "@/lib/permissions"
 
 // Initialize the webstore tables - protected by panel.webstore permission
 export async function POST(request: Request) {
-  // Verify authentication
-  const authResponse = await authMiddleware(request)
-  if (authResponse.status !== 200) {
-    return authResponse
-  }
-
   try {
-    // Extract username from token for permission check
-    const authHeader = request.headers.get("Authorization")
-    if (!authHeader?.startsWith('Bearer ')) {
+    // Get session from NextAuth
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user) {
+      console.log('No authenticated user found in session')
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
-
-    const token = authHeader.split(' ')[1]
-    const tokenData = JSON.parse(atob(token.split('.')[1]))
-    const username = tokenData.username || tokenData.sub
+    
+    const username = session.user.name
     
     if (!username) {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 })
+      console.log('Username missing in session:', session)
+      return NextResponse.json({ error: "Invalid session" }, { status: 401 })
     }
     
     // Check permission
+    console.log(`Checking webstore permission for user ${username}`)
     const hasAccess = await hasPermission(username, 'panel.webstore')
+    
     if (!hasAccess) {
+      console.log(`User ${username} denied access to webstore admin`)
       return NextResponse.json({ error: "Access denied" }, { status: 403 })
     }
 

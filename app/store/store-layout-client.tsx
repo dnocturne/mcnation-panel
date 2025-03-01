@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useEffect, useState } from "react"
 import { usePermission } from "@/hooks/use-permissions"
 import { useQuery } from "@tanstack/react-query"
+import { StoreProvider } from "./store-context"
 import {
   Sheet,
   SheetContent,
@@ -255,11 +256,13 @@ export default function StoreLayoutClient({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <main className="flex-1">
-        <div className="container max-w-full py-8">
-          {children}
-        </div>
-      </main>
+      <StoreProvider>
+        <main className="flex-1">
+          <div className="container max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            {children}
+          </div>
+        </main>
+      </StoreProvider>
 
       <footer className="border-t py-6 md:py-0">
         <div className="container max-w-full flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">

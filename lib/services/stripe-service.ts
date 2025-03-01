@@ -1,14 +1,23 @@
 import { stripe, STRIPE_PAYMENT_CACHE } from '@/lib/stripe';
-import { kv } from '@/lib/kv-store';
 import { AppError } from '@/lib/utils/error-handler';
+import Stripe from 'stripe';
+import {
+  cacheCustomerId,
+  getCachedCustomerId,
+  cachePaymentData,
+  cacheCheckoutSession,
+  getCachedCheckoutSession,
+  markWebhookAsProcessed,
+  hasWebhookBeenProcessed,
+  cachePaymentIntent
+} from '@/lib/stripe-cache';
 
 /**
  * Get or create a Stripe customer for a user
  */
 export async function getOrCreateStripeCustomer(userId: string, email: string): Promise<string> {
-  // Try to get existing customer ID from KV
-  const customerIdKey = `stripe:user:${userId}`;
-  let customerId = await kv.get<string>(customerIdKey);
+  // Try to get existing customer ID from Redis
+  let customerId = await getCachedCustomerId(userId);
   
   if (!customerId) {
     try {
@@ -20,8 +29,8 @@ export async function getOrCreateStripeCustomer(userId: string, email: string): 
         },
       });
       
-      // Store the customer ID in KV
-      await kv.set(customerIdKey, customer.id);
+      // Store the customer ID in Redis
+      await cacheCustomerId(userId, customer.id);
       customerId = customer.id;
     } catch (error) {
       console.error('Error creating Stripe customer:', error);
@@ -49,8 +58,26 @@ export async function createCheckoutSession({
   minecraftUsername: string;
 }) {
   try {
+    // Validate items before creating line items
+    if (!items || items.length === 0) {
+      throw new AppError('No items provided for checkout', 'INVALID_INPUT');
+    }
+    
+    // Filter out items with invalid prices and ensure minimum pricing
+    const validItems = items.filter(item => {
+      if (isNaN(item.price) || item.price <= 0) {
+        console.warn(`Skipping item with invalid price: ${item.id}, ${item.name}, ${item.price}`);
+        return false;
+      }
+      return true;
+    });
+    
+    if (validItems.length === 0) {
+      throw new AppError('No valid items with prices found', 'INVALID_INPUT');
+    }
+    
     // Create line items for Stripe checkout
-    const lineItems = items.map(item => ({
+    const lineItems = validItems.map(item => ({
       price_data: {
         currency: 'usd',
         product_data: {
@@ -75,8 +102,17 @@ export async function createCheckoutSession({
       metadata: {
         userId: customerId.split('_')[1], // Extract user ID from customer ID
         minecraftUsername,
-        itemIds: items.map(item => item.id).join(','),
+        itemIds: validItems.map(item => item.id).join(','),
       },
+    });
+    
+    // Cache the session data
+    await cacheCheckoutSession(session.id, {
+      id: session.id,
+      status: session.status,
+      customerId: session.customer,
+      metadata: session.metadata,
+      created: session.created,
     });
     
     return session;
@@ -87,7 +123,79 @@ export async function createCheckoutSession({
 }
 
 /**
- * Sync payment data for a customer to KV store
+ * Get a Stripe customer by ID
+ */
+export async function getCustomerById(customerId: string): Promise<Stripe.Customer | null> {
+  try {
+    const customer = await stripe.customers.retrieve(customerId);
+    // Return null if the customer is deleted
+    if (customer.deleted) {
+      return null;
+    }
+    return customer as Stripe.Customer;
+  } catch (error) {
+    console.error(`Error retrieving customer ${customerId}:`, error);
+    return null;
+  }
+}
+
+/**
+ * Sync Stripe data to Redis
+ */
+export async function syncStripeDataToRedis(): Promise<void> {
+  try {
+    console.log('Syncing Stripe data to Redis...');
+    
+    // Get all payment intents from Stripe
+    const paymentIntents = await stripe.paymentIntents.list({
+      limit: 100,
+    });
+    
+    // Process payment intents and cache them in Redis
+    for (const intent of paymentIntents.data) {
+      // Create a payment object that matches the STRIPE_PAYMENT_CACHE type
+      const payment: STRIPE_PAYMENT_CACHE = {
+        paymentIntentId: intent.id,
+        status: intent.status as any, // Type casting as the status matches our enum
+        amount: intent.amount,
+        currency: intent.currency,
+        metadata: intent.metadata as Record<string, string>,
+        createdAt: intent.created,
+      };
+      
+      // Try to get payment method details if available
+      if (intent.payment_method && typeof intent.payment_method === 'string') {
+        try {
+          const paymentMethod = await stripe.paymentMethods.retrieve(intent.payment_method);
+          if (paymentMethod.type === 'card' && paymentMethod.card) {
+            payment.paymentMethod = {
+              brand: paymentMethod.card.brand,
+              last4: paymentMethod.card.last4,
+            };
+          }
+        } catch (error) {
+          console.error(`Error retrieving payment method for ${intent.id}:`, error);
+        }
+      }
+      
+      // Cache payment in Redis by payment intent ID
+      await cachePaymentIntent(intent.id, payment);
+      
+      // If there's a customer, also cache by customer ID
+      if (intent.customer && typeof intent.customer === 'string') {
+        await cachePaymentData(intent.customer, payment);
+      }
+    }
+    
+    console.log(`Synced ${paymentIntents.data.length} payments to Redis`);
+  } catch (error) {
+    console.error('Error syncing Stripe data to Redis:', error);
+    throw error;
+  }
+}
+
+/**
+ * Sync payment data for a customer to Redis
  * This is the central function for maintaining consistency between Stripe and your app
  */
 export async function syncStripeDataToKV(customerId: string): Promise<STRIPE_PAYMENT_CACHE> {
@@ -99,8 +207,8 @@ export async function syncStripeDataToKV(customerId: string): Promise<STRIPE_PAY
     });
     
     if (paymentIntents.data.length === 0) {
-      const paymentData = { status: "none" };
-      await kv.set(`stripe:customer:${customerId}`, paymentData);
+      const paymentData: STRIPE_PAYMENT_CACHE = { status: "none" };
+      await cachePaymentData(customerId, paymentData);
       return paymentData;
     }
     
@@ -112,14 +220,15 @@ export async function syncStripeDataToKV(customerId: string): Promise<STRIPE_PAY
       const latestPayment = paymentIntents.data[0];
       const paymentData: STRIPE_PAYMENT_CACHE = {
         paymentIntentId: latestPayment.id,
-        status: latestPayment.status,
+        status: latestPayment.status as any,
         amount: latestPayment.amount,
         currency: latestPayment.currency,
         metadata: latestPayment.metadata as Record<string, string>,
         createdAt: latestPayment.created,
       };
       
-      await kv.set(`stripe:customer:${customerId}`, paymentData);
+      await cachePaymentData(customerId, paymentData);
+      await cachePaymentIntent(latestPayment.id, paymentData);
       return paymentData;
     }
     
@@ -145,7 +254,7 @@ export async function syncStripeDataToKV(customerId: string): Promise<STRIPE_PAY
     // Store payment data
     const paymentData: STRIPE_PAYMENT_CACHE = {
       paymentIntentId: successfulPayment.id,
-      status: successfulPayment.status,
+      status: successfulPayment.status as any,
       amount: successfulPayment.amount,
       currency: successfulPayment.currency,
       paymentMethod,
@@ -153,7 +262,8 @@ export async function syncStripeDataToKV(customerId: string): Promise<STRIPE_PAY
       createdAt: successfulPayment.created,
     };
     
-    await kv.set(`stripe:customer:${customerId}`, paymentData);
+    await cachePaymentData(customerId, paymentData);
+    await cachePaymentIntent(successfulPayment.id, paymentData);
     return paymentData;
   } catch (error) {
     console.error('Error syncing Stripe data:', error);
@@ -165,8 +275,15 @@ export async function syncStripeDataToKV(customerId: string): Promise<STRIPE_PAY
  * Process a Stripe webhook event
  */
 export async function processStripeEvent(event: any) {
-  const { type } = event;
+  const { type, id } = event;
   const { object } = event.data;
+  
+  // Prevent duplicate processing of webhook events
+  const isProcessed = await hasWebhookBeenProcessed(id);
+  if (isProcessed) {
+    console.log(`Webhook ${id} has already been processed, skipping`);
+    return;
+  }
   
   switch (type) {
     case 'checkout.session.completed': {
@@ -200,4 +317,7 @@ export async function processStripeEvent(event: any) {
     default:
       console.log(`Unhandled event type: ${type}`);
   }
+  
+  // Mark webhook as processed
+  await markWebhookAsProcessed(id);
 } 

@@ -95,10 +95,10 @@ export function AdminVerificationModal({
           <DialogDescription>
             Please re-enter your password to access admin features
             {lastVerificationTime && (
-              <p className="mt-1 text-xs text-muted-foreground">
+              <div className="mt-1 text-xs text-muted-foreground">
                 {getLastVerifiedText()}{" "}
                 {getTimeRemainingText() && `• ${getTimeRemainingText()}`}
-              </p>
+              </div>
             )}
           </DialogDescription>
         </DialogHeader>

@@ -1,31 +1,23 @@
 import { useQuery } from "@tanstack/react-query"
 import { useSession } from "next-auth/react"
 
+/**
+ * Hook to check if the current user has a specific permission
+ * This has been updated to work with NextAuth sessions
+ */
 export function usePermission(permission: string) {
   const { data: session, status } = useSession()
-  const username = session?.user?.name
   
-  // For API requests that need authorization
-  // In NextAuth, you might need to implement JWT callbacks to include the token
-  // This will need adjustment based on how your NextAuth is configured
-  const token = (session as any)?.accessToken
-
   return useQuery({
-    queryKey: ['permission', permission, username],
+    queryKey: ['permission', permission, session?.user?.name],
     queryFn: async () => {
-      if (status !== "authenticated") {
-        console.warn('Not authenticated, permission check canceled')
+      if (status !== "authenticated" || !session?.user?.name) {
+        console.warn('Not authenticated or no username, permission check canceled')
         return false
       }
       
-      if (!username) {
-        console.warn('Username missing in session, permission check canceled')
-        return false
-      }
-      
-      // Make API call to check permission - adjust this based on your API requirements
-      // If your permissions API doesn't require a token, you can simplify this
       try {
+        // The API now uses the NextAuth session cookie for authentication
         const response = await fetch(`/api/permissions/check?permission=${permission}`)
         
         if (!response.ok) {
@@ -40,6 +32,8 @@ export function usePermission(permission: string) {
         return false
       }
     },
-    enabled: status === "authenticated" && !!username
+    enabled: status === "authenticated" && !!session?.user?.name,
+    // Refresh permissions more often during development
+    staleTime: process.env.NODE_ENV === 'development' ? 5000 : 60000, // 5s in dev, 1min in prod
   })
 } 

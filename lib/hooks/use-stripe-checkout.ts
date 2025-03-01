@@ -1,7 +1,14 @@
 import { useState } from 'react';
-import { CartItem } from '@/lib/types/store';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+
+// Define the API's expected cart item format
+export interface CheckoutCartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+}
 
 interface UseStripeCheckoutOptions {
   redirectToCheckout?: boolean;
@@ -24,7 +31,7 @@ export function useStripeCheckout(options: UseStripeCheckoutOptions = {}) {
     minecraftUsername,
     returnUrl,
   }: {
-    cartItems: CartItem[];
+    cartItems: CheckoutCartItem[];
     minecraftUsername: string;
     returnUrl?: string;
   }) => {

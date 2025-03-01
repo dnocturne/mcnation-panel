@@ -7,7 +7,8 @@ import {
   setItemPaymentMethods,
   ensureWebstoreTables 
 } from "@/lib/database/webstore"
-import { authMiddleware } from "@/app/api/auth/middleware"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { hasPermission } from "@/lib/permissions"
 
 // Initialize tables if needed first
@@ -15,48 +16,55 @@ async function ensureTables() {
   await ensureWebstoreTables()
 }
 
-// Check if user has webstore permission
+// Check if user has webstore permission using NextAuth
 async function checkPermission(request: Request): Promise<{ authorized: boolean, response?: NextResponse }> {
-  // Verify authentication
-  const authResponse = await authMiddleware(request)
-  if (authResponse.status !== 200) {
-    return { authorized: false, response: authResponse }
-  }
-
-  const authHeader = request.headers.get("Authorization")
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { 
-      authorized: false, 
-      response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) 
+  try {
+    // Get session from NextAuth
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user) {
+      console.log('No authenticated user found in session')
+      return { 
+        authorized: false, 
+        response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) 
+      }
     }
-  }
-
-  const token = authHeader.split(' ')[1]
-  const tokenData = JSON.parse(atob(token.split('.')[1]))
-  const username = tokenData.username || tokenData.sub
-  
-  if (!username) {
-    return { 
-      authorized: false, 
-      response: NextResponse.json({ error: "Invalid token" }, { status: 401 }) 
+    
+    const username = session.user.name
+    
+    if (!username) {
+      console.log('Username missing in session:', session)
+      return { 
+        authorized: false, 
+        response: NextResponse.json({ error: "Invalid session" }, { status: 401 }) 
+      }
     }
-  }
-  
-  // For GET requests, we don't need to check permission (public data)
-  if (request.method === 'GET') {
+    
+    // For GET requests, we don't need to check permission (public data)
+    if (request.method === 'GET') {
+      return { authorized: true }
+    }
+    
+    // For all other methods, check panel.webstore permission
+    console.log(`Checking webstore permission for user ${username}`)
+    const hasAccess = await hasPermission(username, 'panel.webstore')
+    
+    if (!hasAccess) {
+      console.log(`User ${username} denied access to webstore admin`)
+      return { 
+        authorized: false, 
+        response: NextResponse.json({ error: "Access denied" }, { status: 403 }) 
+      }
+    }
+
     return { authorized: true }
-  }
-  
-  // For all other methods, check panel.webstore permission
-  const hasAccess = await hasPermission(username, 'panel.webstore')
-  if (!hasAccess) {
-    return { 
-      authorized: false, 
-      response: NextResponse.json({ error: "Access denied" }, { status: 403 }) 
+  } catch (error) {
+    console.error('Error in permission check:', error)
+    return {
+      authorized: false,
+      response: NextResponse.json({ error: "Authentication error" }, { status: 500 })
     }
   }
-
-  return { authorized: true }
 }
 
 // GET a specific item
