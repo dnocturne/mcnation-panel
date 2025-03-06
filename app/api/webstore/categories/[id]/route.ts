@@ -68,8 +68,8 @@ export async function GET(
   try {
     await ensureTables()
     
-    const id = parseInt(params.id)
-    if (isNaN(id)) {
+    const id = Number.parseInt(params.id)
+    if (Number.isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid category ID" },
         { status: 400 }
@@ -105,8 +105,8 @@ export async function PUT(
   }
 
   try {
-    const id = parseInt(params.id)
-    if (isNaN(id)) {
+    const id = Number.parseInt(params.id)
+    if (Number.isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid category ID" },
         { status: 400 }
@@ -153,8 +153,8 @@ export async function DELETE(
   }
 
   try {
-    const id = parseInt(params.id)
-    if (isNaN(id)) {
+    const id = Number.parseInt(params.id)
+    if (Number.isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid category ID" },
         { status: 400 }

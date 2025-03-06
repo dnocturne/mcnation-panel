@@ -1,6 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { stripe } from '@/lib/stripe';
-import { StripeEvent, allowedStripeEvents, handleStripeEvent } from '@/lib/stripe-webhooks';
+import { allowedStripeEvents, handleStripeEvent } from '@/lib/stripe-webhooks';
+import type { StripeEvent } from '@/lib/stripe-webhooks';
 import { kv } from '@/lib/kv-store';
 import { stripe as stripeEnv } from '@/lib/env';
 
@@ -59,10 +61,10 @@ export async function POST(req: NextRequest) {
     }
     
     return NextResponse.json({ received: true });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Error verifying webhook signature:', err);
     
-    if (err.type === 'StripeSignatureVerificationError') {
+    if (err instanceof Error && 'type' in err && err.type === 'StripeSignatureVerificationError') {
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 400 }

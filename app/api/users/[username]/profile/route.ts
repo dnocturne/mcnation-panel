@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { pool } from "@/lib/db"
-import { RowDataPacket } from "mysql2"
-import fs from "fs"
+import type { RowDataPacket } from "mysql2"
+import fs from "node:fs"
 
 interface UserProfile extends RowDataPacket {
   username: string
@@ -52,7 +52,9 @@ export async function GET(
     }
 
     // Process the permission groups to find the highest rank
-    const permGroups = rows[0].permissionGroups.split(/[,\s]+/).filter(Boolean)
+    const permGroups = Array.isArray(rows[0].permissionGroups) 
+      ? rows[0].permissionGroups 
+      : (rows[0].permissionGroups as unknown as string).split(/[,\s]+/).filter(Boolean)
     const highestRank = getHighestRank(permGroups)
 
     const profile = {

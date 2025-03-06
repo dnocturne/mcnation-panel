@@ -1,4 +1,4 @@
-import { Metadata } from "next"
+import type { Metadata } from "next"
 import { StoreAdminClient } from "../../store-admin-client"
 import { ItemForm } from "../item-form"
 

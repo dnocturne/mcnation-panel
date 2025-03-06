@@ -9,7 +9,8 @@ import { pool } from "@/lib/db"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { hasPermission } from "@/lib/permissions"
-import { RowDataPacket } from "mysql2"
+import type { RowDataPacket } from "mysql2"
+import type { StoreDiscount } from '@/lib/database/webstore'
 
 // Initialize tables if needed first
 async function ensureTables() {
@@ -62,6 +63,9 @@ async function checkPermission(request: Request): Promise<{ authorized: boolean,
   }
 }
 
+// Add a type definition for discount update data
+type DiscountUpdateData = Partial<Omit<StoreDiscount, keyof RowDataPacket>>;
+
 // GET a specific discount by ID
 export async function GET(
   request: Request,
@@ -76,10 +80,10 @@ export async function GET(
     await ensureTables()
     
     // First try to parse as ID
-    const id = parseInt(params.id)
+    const id = Number.parseInt(params.id)
     let discount = null
     
-    if (!isNaN(id)) {
+    if (!Number.isNaN(id)) {
       // Get discount by ID
       const [rows] = await pool.execute<RowDataPacket[]>(
         'SELECT * FROM store_discounts WHERE id = ?',
@@ -119,8 +123,8 @@ export async function PUT(
   }
 
   try {
-    const id = parseInt(params.id)
-    if (isNaN(id)) {
+    const id = Number.parseInt(params.id)
+    if (Number.isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid discount ID" },
         { status: 400 }
@@ -144,8 +148,8 @@ export async function PUT(
     
     // Validate percentage if provided
     if (data.percentage !== undefined) {
-      const percentage = parseInt(data.percentage)
-      if (isNaN(percentage) || percentage <= 0 || percentage > 100) {
+      const percentage = Number.parseInt(data.percentage)
+      if (Number.isNaN(percentage) || percentage <= 0 || percentage > 100) {
         return NextResponse.json(
           { error: "Percentage must be a number between 1 and 100" },
           { status: 400 }
@@ -156,10 +160,10 @@ export async function PUT(
     
     // Parse numeric values
     if (data.max_uses !== undefined) {
-      data.max_uses = data.max_uses === null ? null : parseInt(data.max_uses)
+      data.max_uses = data.max_uses === null ? null : Number.parseInt(data.max_uses)
     }
     
-    const success = await updateDiscount(id, data as any)
+    const success = await updateDiscount(id, data as DiscountUpdateData)
     
     if (!success) {
       return NextResponse.json(
@@ -175,11 +179,11 @@ export async function PUT(
     )
     
     return NextResponse.json(rows[0])
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`Error updating discount ${params.id}:`, error)
     
     // Check for duplicate code error
-    if (error.code === 'ER_DUP_ENTRY') {
+    if (error instanceof Error && error.message.includes('ER_DUP_ENTRY')) {
       return NextResponse.json(
         { error: "Discount code already exists" },
         { status: 400 }
@@ -204,8 +208,8 @@ export async function DELETE(
   }
 
   try {
-    const id = parseInt(params.id)
-    if (isNaN(id)) {
+    const id = Number.parseInt(params.id)
+    if (Number.isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid discount ID" },
         { status: 400 }

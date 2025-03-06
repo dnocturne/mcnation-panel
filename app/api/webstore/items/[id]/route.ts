@@ -75,8 +75,8 @@ export async function GET(
   try {
     await ensureTables()
     
-    const id = parseInt(params.id)
-    if (isNaN(id)) {
+    const id = Number.parseInt(params.id)
+    if (Number.isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid item ID" },
         { status: 400 }
@@ -118,8 +118,8 @@ export async function PUT(
   }
 
   try {
-    const id = parseInt(params.id)
-    if (isNaN(id)) {
+    const id = Number.parseInt(params.id)
+    if (Number.isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid item ID" },
         { status: 400 }
@@ -137,15 +137,14 @@ export async function PUT(
     const data = await request.json()
     
     // Parse numeric values
-    if (data.price) data.price = parseFloat(data.price)
-    if (data.sale_price) data.sale_price = parseFloat(data.sale_price)
-    if (data.category_id) data.category_id = parseInt(data.category_id)
+    if (data.price) data.price = Number.parseFloat(data.price)
+    if (data.sale_price) data.sale_price = Number.parseFloat(data.sale_price)
+    if (data.category_id) data.category_id = Number.parseInt(data.category_id)
     
     // Extract payment methods if provided
-    const paymentMethodIds = data.paymentMethodIds
-    delete data.paymentMethodIds
+    const { paymentMethodIds, ...dataToUpdate } = data
     
-    const success = await updateItem(id, data)
+    const success = await updateItem(id, dataToUpdate)
     
     // Update payment methods if provided
     if (paymentMethodIds && Array.isArray(paymentMethodIds)) {
@@ -186,8 +185,8 @@ export async function DELETE(
   }
 
   try {
-    const id = parseInt(params.id)
-    if (isNaN(id)) {
+    const id = Number.parseInt(params.id)
+    if (Number.isNaN(id)) {
       return NextResponse.json(
         { error: "Invalid item ID" },
         { status: 400 }

@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { getOrCreateStripeCustomer, createCheckoutSession } from '@/lib/services/stripe-service';
 import { getCachedCustomerId } from '@/lib/stripe-cache';
-import { AppError, handleApiError } from '@/lib/utils/error-handler';
 
 // Type for cart items
 interface CartItem {
@@ -78,11 +77,11 @@ export async function POST(req: Request) {
 
     // Return the checkout URL to the client
     return NextResponse.json({ checkoutUrl: checkoutSession.url });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Checkout API error:', error);
     
-    const errorMessage = error.message || 'An unexpected error occurred';
-    const statusCode = error.statusCode || 500;
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+    const statusCode = (error as { statusCode?: number })?.statusCode || 500;
     
     return NextResponse.json(
       { error: errorMessage },

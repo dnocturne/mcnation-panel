@@ -1,4 +1,4 @@
-import { Metadata } from "next"
+import type { Metadata } from "next"
 import { StoreAdminClient } from "../../store-admin-client"
 import { ItemForm } from "../item-form"
 
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 }
 
 export default function EditItemPage({ params }: { params: { id: string } }) {
-  const itemId = parseInt(params.id)
+  const itemId = Number.parseInt(params.id)
 
   return (
     <StoreAdminClient>

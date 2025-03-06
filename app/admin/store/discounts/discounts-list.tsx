@@ -9,9 +9,9 @@ import { PlusCircle } from "lucide-react"
 import { LoadingGrid } from "@/app/components/ui/loading-grid"
 import { ErrorMessage } from "@/app/components/ui/error-message"
 import { formatDate } from "@/lib/utils"
-import { StoreDiscount } from "@/lib/types/store"
+import type { StoreDiscount } from "@/lib/types/store"
 import Link from "next/link"
-import { ColumnDef } from "@tanstack/react-table"
+import type { ColumnDef } from "@tanstack/react-table"
 import { useSession } from "next-auth/react"
 
 export default function DiscountsList() {
@@ -48,7 +48,7 @@ export default function DiscountsList() {
     {
       accessorKey: "percentage",
       header: createSortableHeader("Discount %", "percentage" as keyof StoreDiscount),
-      cell: ({ row }: { row: any }) => {
+      cell: ({ row }: { row: { getValue: (key: keyof StoreDiscount) => number } }) => {
         const percentage = row.getValue("percentage") as number
         return `${percentage}%`
       }
@@ -56,7 +56,7 @@ export default function DiscountsList() {
     {
       accessorKey: "valid_from",
       header: createSortableHeader("Valid From", "valid_from" as keyof StoreDiscount),
-      cell: ({ row }: { row: any }) => {
+      cell: ({ row }: { row: { getValue: (key: keyof StoreDiscount) => string } }) => {
         const date = row.getValue("valid_from") as string
         return formatDate(date)
       }
@@ -64,7 +64,7 @@ export default function DiscountsList() {
     {
       accessorKey: "valid_until",
       header: createSortableHeader("Valid Until", "valid_until" as keyof StoreDiscount),
-      cell: ({ row }: { row: any }) => {
+      cell: ({ row }: { row: { getValue: (key: keyof StoreDiscount) => string } }) => {
         const date = row.getValue("valid_until") as string
         return formatDate(date)
       }

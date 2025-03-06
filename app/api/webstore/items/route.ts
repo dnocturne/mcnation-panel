@@ -71,8 +71,8 @@ export async function GET(request: Request) {
     
     let items = []
     if (categoryId) {
-      const id = parseInt(categoryId)
-      if (!isNaN(id)) {
+      const id = Number.parseInt(categoryId)
+      if (!Number.isNaN(id)) {
         items = await getItems(!showInactive, id)
       } else {
         return NextResponse.json(
@@ -112,17 +112,17 @@ export async function POST(request: Request) {
     }
     
     // Parse numeric values
-    if (data.price) data.price = parseFloat(data.price)
-    if (data.sale_price) data.sale_price = parseFloat(data.sale_price)
-    if (data.category_id) data.category_id = parseInt(data.category_id)
+    if (data.price) data.price = Number.parseFloat(data.price)
+    if (data.sale_price) data.sale_price = Number.parseFloat(data.sale_price)
+    if (data.category_id) data.category_id = Number.parseInt(data.category_id)
     
     // Extract payment methods before creating the item
     const paymentMethodIds = Array.isArray(data.paymentMethodIds) ? data.paymentMethodIds : []
-    // Remove paymentMethodIds from data object as it's not a column in store_items table
-    delete data.paymentMethodIds
+    // Create a new object without paymentMethodIds
+    const { paymentMethodIds: _, ...itemData } = data
     
     // Create the item
-    const itemId = await createItem(data)
+    const itemId = await createItem(itemData)
     
     // Associate payment methods with the item
     if (paymentMethodIds.length > 0) {
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
     
     return NextResponse.json({ 
       id: itemId,
-      ...data,
+      ...itemData,
       paymentMethodIds
     })
   } catch (error) {

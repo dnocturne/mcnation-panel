@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { pool } from "@/lib/db"
-import { RowDataPacket } from "mysql2"
+import type { RowDataPacket } from "mysql2"
 import { getServerSession } from "next-auth"
 import { onlineUsersStore } from "@/lib/online-users-store"
 import { authOptions } from "@/lib/auth"

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { pool } from "@/lib/db"
-import { RowDataPacket } from "mysql2"
+import type { RowDataPacket } from "mysql2"
 
 interface TeamMember {
   username: string
@@ -54,9 +54,9 @@ export async function GET() {
     }, {})
 
     // Sort members within each role by username
-    Object.values(teamByRole).forEach(members => {
+    for (const members of Object.values(teamByRole)) {
       members.sort((a, b) => a.username.localeCompare(b.username))
-    })
+    }
 
     return NextResponse.json({ 
       teamByRole,

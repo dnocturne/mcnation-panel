@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     
     // Get query parameters
     const url = new URL(req.url);
-    const limit = parseInt(url.searchParams.get('limit') || '10');
+    const limit = Number.parseInt(url.searchParams.get('limit') || '10');
     const status = url.searchParams.get('status');
     
     // Fetch payment intents from Stripe
@@ -45,7 +45,7 @@ export async function GET(req: Request) {
           }
           
           // Try to get minecraft username from metadata
-          if (intent.metadata && intent.metadata.minecraftUsername) {
+          if (intent.metadata?.minecraftUsername) {
             minecraftUsername = intent.metadata.minecraftUsername;
           }
         }

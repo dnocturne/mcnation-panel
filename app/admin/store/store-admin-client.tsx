@@ -18,7 +18,7 @@ export function StoreAdminClient({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check if user is logged in
     if (status === "unauthenticated") {
-      router.push("/login?redirect=" + encodeURIComponent(window.location.pathname))
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`)
       return
     }
 

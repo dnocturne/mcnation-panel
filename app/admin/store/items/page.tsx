@@ -1,4 +1,4 @@
-import { Metadata } from "next"
+import type { Metadata } from "next"
 import { StoreItemsList } from "./store-items-list"
 
 export const metadata: Metadata = {

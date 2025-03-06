@@ -229,7 +229,7 @@ export function ItemForm({ itemId }: ItemFormProps) {
   if (initialLoading) {
     return (
       <div className="flex justify-center items-center h-48">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     )
   }
@@ -274,7 +274,7 @@ export function ItemForm({ itemId }: ItemFormProps) {
                 <FormItem>
                   <FormLabel>Category</FormLabel>
                   <Select
-                    onValueChange={(value) => field.onChange(value === "none" ? null : parseInt(value))}
+                    onValueChange={(value) => field.onChange(value === "none" ? null : Number.parseInt(value))}
                     value={field.value?.toString() || "none"}
                   >
                     <FormControl>
@@ -310,7 +310,7 @@ export function ItemForm({ itemId }: ItemFormProps) {
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value === '' ? '' : parseFloat(e.target.value))}
+                        onChange={(e) => field.onChange(e.target.value === '' ? '' : Number.parseFloat(e.target.value))}
                       />
                     </FormControl>
                     <FormMessage />
@@ -332,7 +332,7 @@ export function ItemForm({ itemId }: ItemFormProps) {
                         placeholder="0.00"
                         {...field}
                         value={field.value === null ? '' : field.value}
-                        onChange={(e) => field.onChange(e.target.value === '' ? null : parseFloat(e.target.value))}
+                        onChange={(e) => field.onChange(e.target.value === '' ? null : Number.parseFloat(e.target.value))}
                       />
                     </FormControl>
                     <FormMessage />
@@ -391,7 +391,7 @@ export function ItemForm({ itemId }: ItemFormProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[50px]"></TableHead>
+                      <TableHead className="w-[50px]" />
                       <TableHead>Name</TableHead>
                       <TableHead>Description</TableHead>
                     </TableRow>

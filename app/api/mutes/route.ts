@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { pool } from "@/lib/db"
-import { RowDataPacket } from "mysql2"
+import type { RowDataPacket } from "mysql2"
 
 interface MuteRow extends RowDataPacket {
   id: number
@@ -13,8 +13,8 @@ interface MuteRow extends RowDataPacket {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const page = parseInt(searchParams.get("page") || "1")
-  const pageSize = parseInt(searchParams.get("pageSize") || "10")
+  const page = Number.parseInt(searchParams.get("page") || "1")
+  const pageSize = Number.parseInt(searchParams.get("pageSize") || "10")
   const offset = (page - 1) * pageSize
 
   try {

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
-import { mkdir } from 'fs/promises'
-import fs from "fs"
-import path from "path"
+import { writeFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { mkdir } from 'node:fs/promises'
+import fs from "node:fs"
+import path from "node:path"
 
 export async function POST(
   request: Request,
