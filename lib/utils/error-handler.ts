@@ -112,9 +112,12 @@ export function handleApiError(
 	logError(error, "API");
 
 	const formattedError = formatApiError(error);
-	return {
-		error: formattedError.error || defaultMessage,
-		code: formattedError.code,
-		status: formattedError.status,
-	};
+	return Response.json(
+		{
+			error: formattedError.error || defaultMessage,
+			code: formattedError.code,
+			status: formattedError.status,
+		},
+		{ status: formattedError.status },
+	);
 }
