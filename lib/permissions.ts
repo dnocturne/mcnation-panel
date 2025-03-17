@@ -1,67 +1,77 @@
-import { pool } from "@/lib/db"
-import { RowDataPacket } from "mysql2"
+import { pool } from "@/lib/db";
+import type { RowDataPacket } from "mysql2";
 
 interface Permission {
-  permission: string
-  value: number
+	permission: string;
+	value: number;
 }
 
-export async function getUserPermissions(username: string): Promise<Permission[]> {
-  // Add validation to ensure username is defined
-  if (!username) {
-    console.error('getUserPermissions called with undefined username')
-    return []
-  }
-  
-  try {
-    // First get user's groups
-    const groupQuery = `
+export async function getUserPermissions(
+	username: string,
+): Promise<Permission[]> {
+	// Add validation to ensure username is defined
+	if (!username) {
+		console.error("getUserPermissions called with undefined username");
+		return [];
+	}
+
+	try {
+		// First get user's groups
+		const groupQuery = `
       SELECT permgroups
       FROM PlayerData
       WHERE username = ?
-    `
-    const [groupRows] = await pool.execute<RowDataPacket[]>(groupQuery, [username])
-    
-    // Split groups and clean them up (remove spaces, empty entries)
-    const groups = (groupRows[0]?.permgroups || 'default')
-      .split(',')
-      .map((g: string) => g.trim())
-      .filter(Boolean)
+    `;
+		const [groupRows] = await pool.execute<RowDataPacket[]>(groupQuery, [
+			username,
+		]);
 
-    if (groups.length === 0) {
-      groups.push('default')
-    }
+		// Split groups and clean them up (remove spaces, empty entries)
+		const groups = (groupRows[0]?.permgroups || "default")
+			.split(",")
+			.map((g: string) => g.trim())
+			.filter(Boolean);
 
-    console.log('User groups:', groups) // Debug log
+		if (groups.length === 0) {
+			groups.push("default");
+		}
 
-    // Then get permissions for all groups
-    const permQuery = `
+		console.log("User groups:", groups); // Debug log
+
+		// Then get permissions for all groups
+		const permQuery = `
       SELECT permission, value
       FROM luckperms_group_permissions
-      WHERE name IN (${groups.map(() => '?').join(',')})
-    `
-    const [permRows] = await pool.execute<RowDataPacket[]>(permQuery, groups)
-    
-    console.log('User permissions:', permRows) // Debug log
-    
-    return permRows as Permission[]
-  } catch (error) {
-    console.error('Error fetching permissions:', error)
-    return []
-  }
+      WHERE name IN (${groups.map(() => "?").join(",")})
+    `;
+		const [permRows] = await pool.execute<RowDataPacket[]>(permQuery, groups);
+
+		console.log("User permissions:", permRows); // Debug log
+
+		return permRows as Permission[];
+	} catch (error) {
+		console.error("Error fetching permissions:", error);
+		return [];
+	}
 }
 
-export async function hasPermission(username: string, requiredPermission: string): Promise<boolean> {
-  // Add validation to ensure parameters are defined
-  if (!username || !requiredPermission) {
-    console.error('hasPermission called with undefined parameters:', { username, requiredPermission })
-    return false
-  }
+export async function hasPermission(
+	username: string,
+	requiredPermission: string,
+): Promise<boolean> {
+	// Add validation to ensure parameters are defined
+	if (!username || !requiredPermission) {
+		console.error("hasPermission called with undefined parameters:", {
+			username,
+			requiredPermission,
+		});
+		return false;
+	}
 
-  const permissions = await getUserPermissions(username)
-  
-  // Check if any of the user's groups has the required permission with value = 1
-  return permissions.some(p => 
-    p.permission === requiredPermission && p.value === 1
-  )
-} 
+	const permissions = await getUserPermissions(username);
+
+	// Check if any of the user's groups has the required permission with value = 1
+	return permissions.some(
+		(p) => p.permission === requiredPermission && p.value === 1,
+	);
+}

@@ -123,7 +123,7 @@ export default function CartPage() {
 					) : (
 						<div className="space-y-4">
 							{cartItems.map((cartItem) => {
-								const { item, quantity, paymentMethodId } = cartItem;
+								const { item, quantity } = cartItem;
 								const hasDiscount =
 									item.sale_price !== null && item.sale_price < item.price;
 								const displayPrice = hasDiscount

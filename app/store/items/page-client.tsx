@@ -13,11 +13,10 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { StoreItemCard } from "../components/store-item-card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingGrid } from "@/app/components/ui/loading-grid";
 import { ErrorMessage } from "@/app/components/ui/error-message";
 import { Search, SlidersHorizontal, RefreshCw } from "lucide-react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export function StoreItemsClient() {
 	const [search, setSearch] = useState("");

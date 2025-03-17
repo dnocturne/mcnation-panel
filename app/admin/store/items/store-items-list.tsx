@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
-import Image from "next/image";
 import { PlusCircle, Edit, Trash2, Eye, EyeOff } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -32,8 +29,6 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogTrigger,
-	DialogClose,
 } from "@/components/ui/dialog";
 import {
 	Select,
@@ -43,7 +38,6 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
@@ -71,8 +65,6 @@ interface Category {
 }
 
 export function StoreItemsList() {
-	const router = useRouter();
-	const { data: session } = useSession();
 	const [items, setItems] = useState<StoreItem[]>([]);
 	const [categories, setCategories] = useState<Category[]>([]);
 	const [loading, setLoading] = useState(true);

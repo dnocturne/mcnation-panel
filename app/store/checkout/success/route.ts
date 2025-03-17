@@ -4,7 +4,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getCachedCustomerId } from "@/lib/stripe-cache";
 import { syncStripeDataToRedis } from "@/lib/services/stripe-service";
-import { redirect } from "next/navigation";
 
 /**
  * Handler for the checkout success page

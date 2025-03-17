@@ -35,7 +35,6 @@ function ActionDialog({
 	const [reason, setReason] = useState("");
 	const [duration, setDuration] = useState("");
 	const { toast } = useToast();
-	const { data: session } = useSession();
 
 	const handleAction = async () => {
 		if (!reason) {

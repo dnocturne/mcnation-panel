@@ -29,13 +29,6 @@ interface User {
 	};
 }
 
-// For nested property access
-type NestedKeyOf<T> = {
-	[K in keyof T & (string | number)]: T[K] extends object
-		? `${K}.${NestedKeyOf<T[K]>}`
-		: K;
-}[keyof T & (string | number)];
-
 // Sample data
 const sampleUsers: User[] = Array.from({ length: 50 }).map((_, i) => ({
 	id: `user-${i + 1}`,

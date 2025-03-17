@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import { NavigationMenuDemo } from "@/components/navbar";
 import { useParams } from "next/navigation";
-import { useQuery, useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { PunishmentHistory } from "@/components/profile/punishment-history";
 import type { UserProfile } from "@/types/user";
@@ -17,15 +17,14 @@ export default function ProfilePage() {
 	const loggedInUser = session?.user?.name;
 	const isOwnProfile = username === loggedInUser;
 
-	const { data: userProfile, isLoading: profileLoading } =
-		useQuery<UserProfile>({
-			queryKey: ["userProfile", username],
-			queryFn: async () => {
-				const response = await fetch(`/api/users/${username}/profile`);
-				if (!response.ok) throw new Error("Failed to fetch profile");
-				return response.json();
-			},
-		});
+	const { data: userProfile } = useQuery<UserProfile>({
+		queryKey: ["userProfile", username],
+		queryFn: async () => {
+			const response = await fetch(`/api/users/${username}/profile`);
+			if (!response.ok) throw new Error("Failed to fetch profile");
+			return response.json();
+		},
+	});
 
 	const { data: onlineStatus } = useQuery({
 		queryKey: ["onlineStatus", username],
