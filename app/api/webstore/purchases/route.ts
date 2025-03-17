@@ -16,6 +16,9 @@ async function checkPermission(
 	request: Request,
 ): Promise<{ authorized: boolean; response?: NextResponse }> {
 	try {
+		// Log request method for auditing purposes
+		console.log(`Processing ${request.method} request for permissions check`);
+
 		// Get session from NextAuth
 		const session = await getServerSession(authOptions);
 

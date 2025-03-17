@@ -15,11 +15,6 @@ export interface AuthState {
 // Define a type for the data part of AuthState
 type AuthStateData = Pick<AuthState, "token" | "username" | "tokenExpiry">;
 
-// Define a type for the persisted state
-type PersistedAuthState = Partial<
-	Pick<AuthState, "token" | "username" | "tokenExpiry">
->;
-
 export const useAuth = create<AuthState>()(
 	persist(
 		(set, get) => ({
@@ -54,7 +49,7 @@ export const useAuth = create<AuthState>()(
 		}),
 		{
 			name: "auth-storage",
-			migrate: (persistedState: unknown, version) => {
+			migrate: (persistedState: unknown) => {
 				const state = persistedState as Partial<AuthStateData>;
 
 				if (state && !("tokenExpiry" in state)) {

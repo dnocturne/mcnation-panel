@@ -6,7 +6,6 @@ import {
 	getCachedCustomerId,
 	cachePaymentData,
 	cacheCheckoutSession,
-	getCachedCheckoutSession,
 	markWebhookAsProcessed,
 	hasWebhookBeenProcessed,
 	cachePaymentIntent,

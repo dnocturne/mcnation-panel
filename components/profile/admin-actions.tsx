@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useSession } from "next-auth/react";
 
 interface AdminActionsProps {
 	username: string;
@@ -90,6 +89,7 @@ function ActionDialog({
 			setReason("");
 			setDuration("");
 		} catch (error) {
+			console.error(`Error during ${actionType} action:`, error);
 			toast({
 				title: "Error",
 				description: `Failed to ${actionType} user`,

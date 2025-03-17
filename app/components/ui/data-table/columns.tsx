@@ -1,6 +1,6 @@
 "use client";
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, Column, Row } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import {
 	ArrowUpDown,
@@ -24,20 +24,26 @@ import { Badge } from "@/app/components/ui/badge";
 // Helper function to create a sortable header
 export function createSortableHeader<T>(
 	label: string,
-	key: keyof T,
+	// Removed unused parameter
 ): ColumnDef<T>["header"] {
-	return ({ column }) => {
-		return (
+	// This is the anonymous component that needs a display name
+	const HeaderFunc = ({ column }: { column: Column<T> }) => {
+		// Add display name to component
+		const SortableHeader = ({ column }: { column: Column<T> }) => (
 			<Button
 				variant="ghost"
 				onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 				className="-ml-4 h-8"
 			>
 				{label}
-				<ArrowUpDown className="ml-1 h-4 w-4" />
+				<ArrowUpDown className="ml-2 h-4 w-4" />
 			</Button>
 		);
+		SortableHeader.displayName = "SortableHeader";
+		return <SortableHeader column={column} />;
 	};
+	HeaderFunc.displayName = "HeaderFunc";
+	return HeaderFunc;
 }
 
 // Helper function to create an actions column
@@ -172,10 +178,22 @@ export function createStatusCell<T>({
 		}
 	>;
 }): ColumnDef<T>["cell"] {
-	return ({ row }) => {
-		const value = row.getValue(key as string) as string;
-		const status = statusMap[value] || { label: value, variant: "default" };
+	const StatusCellWrapper = ({ row }: { row: Row<T> }) => {
+		const value = String(row.getValue(key as string) || "");
+		const status = statusMap[value] || {
+			label: value,
+			variant: "default",
+		};
 
-		return <Badge variant={status.variant}>{status.label}</Badge>;
+		// Add display name to component
+		const StatusCell = () => (
+			<Badge variant={status.variant} className="capitalize">
+				{status.label}
+			</Badge>
+		);
+		StatusCell.displayName = "StatusCell";
+		return <StatusCell />;
 	};
+	StatusCellWrapper.displayName = "StatusCellWrapper";
+	return StatusCellWrapper;
 }

@@ -72,6 +72,7 @@ export default async function StoreItemPage({
 		);
 	} catch (error) {
 		// If we have an error fetching the item, let the client component handle it
+		console.error("Error fetching store item:", error);
 		return (
 			<div className="space-y-6">
 				<StoreItemClient itemId={id} paymentMethods={[]} />

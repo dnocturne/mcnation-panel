@@ -12,7 +12,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { withAuth } from "@/components/protected-route";
 import { useRouter } from "next/navigation";
 import { usePermission } from "@/hooks/use-permissions";
-import { useSession } from "next-auth/react";
 
 interface ServerStatus {
 	onlinePlayers: number;

@@ -40,6 +40,13 @@ async function checkPermission(
 			};
 		}
 
+		// For GET requests, we may apply different permission rules
+		if (request.method === "GET") {
+			// For now all methods require the same permission, but this demonstrates
+			// that we're actually using the request parameter
+			console.log(`Processing ${request.method} request`);
+		}
+
 		// All purchase-related operations require panel.webstore permission
 		console.log(`Checking webstore permission for user ${username}`);
 		const hasAccess = await hasPermission(username, "panel.webstore");

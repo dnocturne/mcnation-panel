@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
 
 // Define the API's expected cart item format
 export interface CheckoutCartItem {

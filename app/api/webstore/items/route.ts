@@ -136,7 +136,8 @@ export async function POST(request: Request) {
 		const paymentMethodIds = Array.isArray(data.paymentMethodIds)
 			? data.paymentMethodIds
 			: [];
-		// Create a new object without paymentMethodIds
+		// Create a new object without paymentMethodIds - using rest operator without naming the property
+		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const { paymentMethodIds: _, ...itemData } = data;
 
 		// Create the item
