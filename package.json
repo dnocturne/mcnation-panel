@@ -7,10 +7,10 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
-		"test": "jest",
-		"test:watch": "jest --watch",
-		"test:coverage": "jest --coverage",
-		"test:badges": "jest --coverage && jest-coverage-badges"
+		"test": "bun test",
+		"test:watch": "bun test --watch",
+		"test:coverage": "bun test --coverage",
+		"test:badges": "bun test --coverage && jest-coverage-badges"
 	},
 	"dependencies": {
 		"@auth/core": "^0.38.0",
