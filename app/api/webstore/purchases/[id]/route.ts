@@ -6,6 +6,7 @@ import {
 	updatePurchase,
 	deletePurchase,
 } from "@/lib/database/webstore";
+import type { StorePurchase } from "@/lib/database/webstore";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -79,6 +80,15 @@ async function checkPermission(
 		};
 	}
 }
+
+// Simplified type for purchase updates
+type PurchaseUpdateData = {
+	status?: string;
+	transaction_id?: string;
+	notes?: string;
+	delivered?: boolean;
+	delivered_at?: string | Date;
+};
 
 // GET a specific purchase
 export async function GET(
@@ -159,7 +169,7 @@ export async function PUT(
 		const data = await request.json();
 
 		// Only allow certain fields to be updated
-		const updateData: any = {
+		const updateData: PurchaseUpdateData = {
 			...(data.status !== undefined && { status: data.status }),
 			...(data.transaction_id !== undefined && {
 				transaction_id: data.transaction_id,
@@ -178,7 +188,10 @@ export async function PUT(
 			);
 		}
 
-		const success = await updatePurchase(id, updateData);
+		const success = await updatePurchase(
+			id,
+			updateData as Partial<StorePurchase>,
+		);
 
 		if (!success) {
 			return NextResponse.json(

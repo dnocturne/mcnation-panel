@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { NavigationMenuDemo } from "@/components/navbar";
+import Link from "next/link";
 
 interface TeamMember {
 	username: string;
@@ -83,22 +84,27 @@ export default function TeamsPage() {
 						<Card key={member.username} className="overflow-hidden">
 							<CardContent className="p-6">
 								<div className="flex flex-col items-center text-center space-y-4">
-									<Avatar className="h-24 w-24">
-										{member.avatarUrl ? (
-											<AvatarImage
-												src={member.avatarUrl}
-												alt={member.username}
-											/>
-										) : (
-											<AvatarFallback className="text-xl">
-												{member.username[0].toUpperCase()}
-											</AvatarFallback>
-										)}
-									</Avatar>
+									<Link href={`/profile/${member.username}`}>
+										<Avatar className="h-24 w-24 cursor-pointer hover:opacity-90 transition-opacity">
+											{member.avatarUrl ? (
+												<AvatarImage
+													src={member.avatarUrl}
+													alt={member.username}
+												/>
+											) : (
+												<AvatarFallback className="text-xl">
+													{member.username[0].toUpperCase()}
+												</AvatarFallback>
+											)}
+										</Avatar>
+									</Link>
 									<div>
-										<div className="font-semibold text-lg">
+										<Link
+											href={`/profile/${member.username}`}
+											className="font-semibold text-lg hover:underline"
+										>
 											{member.username}
-										</div>
+										</Link>
 										<div className="text-sm text-muted-foreground capitalize">
 											{member.role}
 										</div>
