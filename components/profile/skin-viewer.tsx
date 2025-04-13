@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as skinview3d from "skinview3d";
+import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -24,6 +25,7 @@ export function SkinViewer({ username }: SkinViewerProps) {
 	const [animationType, setAnimationType] = useState<AnimationType>("walking");
 	const [speed, setSpeed] = useState([1]);
 	const [zoom, setZoom] = useState([0.9]);
+	const { theme } = useTheme();
 
 	useEffect(() => {
 		if (!canvasRef.current || viewerRef.current) return;
@@ -45,7 +47,13 @@ export function SkinViewer({ username }: SkinViewerProps) {
 		viewer.autoRotateSpeed = 1.0;
 		viewer.zoom = zoom[0];
 		viewer.fov = 70;
-		viewer.background = 0x2a2a2a;
+
+		// Set background based on current theme
+		if (theme === "dark") {
+			viewer.background = 0x1a1a1a; // Darker background for dark mode
+		} else {
+			viewer.background = 0xf5f5f5; // Light gray for light mode
+		}
 
 		viewerRef.current = viewer;
 
@@ -54,7 +62,18 @@ export function SkinViewer({ username }: SkinViewerProps) {
 			viewer.dispose();
 			viewerRef.current = null;
 		};
-	}, [username, zoom]);
+	}, [username, zoom, theme]);
+
+	// Update background when theme changes
+	useEffect(() => {
+		if (!viewerRef.current) return;
+
+		if (theme === "dark") {
+			viewerRef.current.background = 0x1a1a1a; // Darker background for dark mode
+		} else {
+			viewerRef.current.background = 0xf5f5f5; // Light gray for light mode
+		}
+	}, [theme]);
 
 	// Handle animation changes
 	useEffect(() => {
