@@ -93,13 +93,13 @@ export function AdminVerificationModal({
 					<DialogTitle>Verify Admin Access</DialogTitle>
 					<DialogDescription>
 						Please re-enter your password to access admin features
-						{lastVerificationTime && (
-							<div className="mt-1 text-xs text-muted-foreground">
-								{getLastVerifiedText()}{" "}
-								{getTimeRemainingText() && `• ${getTimeRemainingText()}`}
-							</div>
-						)}
 					</DialogDescription>
+					{lastVerificationTime && (
+						<div className="mt-1 text-xs text-muted-foreground">
+							{getLastVerifiedText()}{" "}
+							{getTimeRemainingText() && `• ${getTimeRemainingText()}`}
+						</div>
+					)}
 				</DialogHeader>
 
 				<form onSubmit={handleVerify} className="space-y-4">

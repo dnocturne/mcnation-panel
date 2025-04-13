@@ -49,7 +49,7 @@ async function checkPermission(
 
 		// All purchase-related operations require panel.webstore permission
 		console.log(`Checking webstore permission for user ${username}`);
-		const hasAccess = await hasPermission(username, "panel.webstore");
+		const hasAccess = await hasPermission(username, "panel.store.admin");
 
 		if (!hasAccess) {
 			console.log(`User ${username} denied access to webstore admin`);

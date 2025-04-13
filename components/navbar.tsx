@@ -43,6 +43,7 @@ export function NavigationMenuDemo() {
 	const router = useRouter();
 	const { data: hasDashboardAccess, isLoading } =
 		usePermission("panel.dashboard");
+	const { data: hasAdminPermission } = usePermission("panel.store.admin");
 
 	const { data: avatarData } = useQuery({
 		queryKey: ["avatar", username],
@@ -88,6 +89,11 @@ export function NavigationMenuDemo() {
 											<ListItem href="/admin/rest" title="API Config">
 												Configure REST API connection settings
 											</ListItem>
+											{hasAdminPermission && (
+												<ListItem href="/admin/store/items" title="Store Admin">
+													Manage store items, categories and payments
+												</ListItem>
+											)}
 										</ul>
 									</NavigationMenuContent>
 								</NavigationMenuItem>
@@ -107,6 +113,17 @@ export function NavigationMenuDemo() {
 									Our Team
 								</NavigationMenuLink>
 							</NavigationMenuItem>
+							{hasAdminPermission && (
+								<NavigationMenuItem>
+									<Link href="/store" legacyBehavior passHref>
+										<NavigationMenuLink
+											className={navigationMenuTriggerStyle()}
+										>
+											Store
+										</NavigationMenuLink>
+									</Link>
+								</NavigationMenuItem>
+							)}
 						</NavigationMenuList>
 					</NavigationMenu>
 

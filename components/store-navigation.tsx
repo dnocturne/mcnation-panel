@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/tooltip";
 
 export function StoreNavigation() {
-	const { data: hasAdminPermission } = usePermission("panel.webstore");
+	const { data: hasAdminPermission } = usePermission("panel.store.admin");
 	const { data: session, status } = useSession();
 	const [cartCount, setCartCount] = useState(0);
 
