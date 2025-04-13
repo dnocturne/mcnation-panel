@@ -1,5 +1,6 @@
 import { pool } from "@/lib/db";
 import type { RowDataPacket } from "mysql2";
+import { runMigrations } from "./migrations";
 
 // Interfaces
 export interface StoreItem extends RowDataPacket {
@@ -11,6 +12,7 @@ export interface StoreItem extends RowDataPacket {
 	category_id: number;
 	image_url: string | null;
 	active: boolean;
+	on_sale: boolean;
 	created_at: Date;
 	updated_at: Date;
 }
@@ -80,6 +82,7 @@ export async function ensureWebstoreTables() {
         category_id INT,
         image_url VARCHAR(255),
         active BOOLEAN NOT NULL DEFAULT TRUE,
+        on_sale BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (category_id) REFERENCES store_categories(id) ON DELETE SET NULL
@@ -150,6 +153,9 @@ export async function ensureWebstoreTables() {
 	} finally {
 		connection.release();
 	}
+
+	// Run migrations to ensure database schema is up to date
+	await runMigrations();
 }
 
 // CRUD operations for categories

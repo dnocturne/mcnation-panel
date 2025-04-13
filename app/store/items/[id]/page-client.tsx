@@ -101,7 +101,8 @@ export function StoreItemClient({
 		);
 	}
 
-	const hasDiscount = item.sale_price !== null && item.sale_price < item.price;
+	const hasDiscount =
+		item.sale_price !== null && item.sale_price < item.price && item.on_sale;
 	const displayPrice = hasDiscount ? item.sale_price : item.price;
 
 	return (
