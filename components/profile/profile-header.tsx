@@ -21,19 +21,27 @@ export function ProfileHeader({
 	userProfile,
 	onlineStatus,
 }: ProfileHeaderProps) {
-	// Function to get the appropriate badge variant based on the rank
-	const getRankVariant = (rank: string) => {
-		const rankMap: Record<
-			string,
-			"default" | "secondary" | "destructive" | "outline"
-		> = {
-			harbinger: "destructive",
-			genesis: "secondary",
-			warmaster: "default",
-			// Add more ranks as needed
+	// Function to get the appropriate badge display
+	const getRankDisplay = (rank: string) => {
+		// Transform ranks if needed
+		const displayNameMap: Record<string, string> = {
+			aod: "Architect of Doom",
 		};
 
-		return rankMap[rank.toLowerCase()] || "outline";
+		return displayNameMap[rank.toLowerCase()] || rank;
+	};
+
+	// Function to get the custom style for the rank badge
+	const getRankStyle = (rank: string) => {
+		const rankStyles: Record<string, React.CSSProperties> = {
+			aod: { backgroundColor: "#7332c8", color: "white" },
+			harbinger: { backgroundColor: "#ff0000", color: "white" },
+			reaper: { backgroundColor: "#c58518", color: "white" },
+			shadow: { backgroundColor: "#e7dc0a", color: "black" },
+			specter: { backgroundColor: "#fccd00", color: "black" },
+		};
+
+		return rankStyles[rank.toLowerCase()] || {};
 	};
 
 	return (
@@ -50,10 +58,11 @@ export function ProfileHeader({
 					<div className="mt-2 flex items-center gap-2">
 						{userProfile?.highestRank && (
 							<Badge
-								variant={getRankVariant(userProfile.highestRank)}
+								variant="outline"
 								className="text-sm capitalize font-medium"
+								style={getRankStyle(userProfile.highestRank)}
 							>
-								{userProfile.highestRank}
+								{getRankDisplay(userProfile.highestRank)}
 							</Badge>
 						)}
 						{!userProfile?.highestRank && (
