@@ -48,6 +48,19 @@ export interface ItemPaymentMethod extends RowDataPacket {
 	payment_method_id: number;
 }
 
+export interface StorePurchase extends RowDataPacket {
+	id: number;
+	minecraft_uuid: string;
+	item_id: number;
+	payment_method_id: number;
+	discount_id: number | null;
+	status: string;
+	price_paid: number;
+	transaction_id: string | null;
+	created_at: Date;
+	updated_at: Date;
+}
+
 export interface MySQLResult {
 	insertId: number;
 	affectedRows: number;
@@ -125,6 +138,25 @@ export async function ensureWebstoreTables() {
         PRIMARY KEY (item_id, payment_method_id),
         FOREIGN KEY (item_id) REFERENCES store_items(id) ON DELETE CASCADE,
         FOREIGN KEY (payment_method_id) REFERENCES store_payment_methods(id) ON DELETE CASCADE
+      )
+    `);
+
+		// Create store_purchases table
+		await connection.execute(`
+      CREATE TABLE IF NOT EXISTS store_purchases (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        minecraft_uuid VARCHAR(36) NOT NULL,
+        item_id INT NOT NULL,
+        payment_method_id INT NOT NULL,
+        discount_id INT,
+        status VARCHAR(20) NOT NULL DEFAULT 'pending',
+        price_paid DECIMAL(10, 2) NOT NULL,
+        transaction_id VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (item_id) REFERENCES store_items(id) ON DELETE CASCADE,
+        FOREIGN KEY (payment_method_id) REFERENCES store_payment_methods(id) ON DELETE CASCADE,
+        FOREIGN KEY (discount_id) REFERENCES store_discounts(id) ON DELETE SET NULL
       )
     `);
 
@@ -487,6 +519,203 @@ export async function useDiscountCode(code: string): Promise<boolean> {
 		return (result as MySQLResult).affectedRows > 0;
 	} catch (error: unknown) {
 		console.error("Error using discount code:", error);
+		return false;
+	}
+}
+
+// CRUD operations for purchases
+export async function getPurchases(
+	options: {
+		minecraftUuid?: string;
+		itemId?: number;
+		status?: string;
+		paymentMethodId?: number;
+		page?: number;
+		limit?: number;
+		fromDate?: string;
+		toDate?: string;
+	} = {},
+): Promise<{
+	purchases: StorePurchase[];
+	total: number;
+	page: number;
+	limit: number;
+	totalPages: number;
+}> {
+	const {
+		minecraftUuid,
+		itemId,
+		status,
+		paymentMethodId,
+		page = 1,
+		limit = 25,
+		fromDate,
+		toDate,
+	} = options;
+
+	let query = `
+    SELECT p.*, i.name as item_name, pm.name as payment_method_name 
+    FROM store_purchases p
+    LEFT JOIN store_items i ON p.item_id = i.id
+    LEFT JOIN store_payment_methods pm ON p.payment_method_id = pm.id
+    WHERE 1=1
+  `;
+
+	const params: (string | number)[] = [];
+
+	// Add filters if provided
+	if (minecraftUuid) {
+		query += " AND p.minecraft_uuid = ?";
+		params.push(minecraftUuid);
+	}
+
+	if (itemId) {
+		query += " AND p.item_id = ?";
+		params.push(itemId);
+	}
+
+	if (status) {
+		query += " AND p.status = ?";
+		params.push(status);
+	}
+
+	if (paymentMethodId) {
+		query += " AND p.payment_method_id = ?";
+		params.push(paymentMethodId);
+	}
+
+	if (fromDate) {
+		query += " AND p.created_at >= ?";
+		params.push(fromDate);
+	}
+
+	if (toDate) {
+		query += " AND p.created_at <= ?";
+		params.push(toDate);
+	}
+
+	// Count total records for pagination
+	const countQuery = query.replace(
+		"SELECT p.*, i.name as item_name, pm.name as payment_method_name",
+		"SELECT COUNT(*) as total",
+	);
+	const [countRows] = await pool.execute<RowDataPacket[]>(countQuery, params);
+	const total = countRows[0].total;
+
+	// Add sorting and pagination
+	const offset = (page - 1) * limit;
+	query += " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
+	params.push(limit, offset);
+
+	// Execute the query
+	const [rows] = await pool.execute<StorePurchase[]>(query, params);
+
+	// Calculate pagination metadata
+	const totalPages = Math.ceil(total / limit);
+
+	return {
+		purchases: rows,
+		total,
+		page,
+		limit,
+		totalPages,
+	};
+}
+
+export async function getPurchaseById(
+	id: number,
+): Promise<StorePurchase | null> {
+	const [rows] = await pool.execute<StorePurchase[]>(
+		`
+    SELECT p.*, i.name as item_name, pm.name as payment_method_name 
+    FROM store_purchases p
+    LEFT JOIN store_items i ON p.item_id = i.id
+    LEFT JOIN store_payment_methods pm ON p.payment_method_id = pm.id
+    WHERE p.id = ?
+    `,
+		[id],
+	);
+	return rows.length > 0 ? rows[0] : null;
+}
+
+export async function createPurchase(data: {
+	minecraft_uuid: string;
+	item_id: number;
+	payment_method_id: number;
+	discount_id?: number;
+	status?: string;
+	price_paid: number;
+	transaction_id?: string;
+}): Promise<number> {
+	const {
+		minecraft_uuid,
+		item_id,
+		payment_method_id,
+		discount_id,
+		status = "pending",
+		price_paid,
+		transaction_id,
+	} = data;
+
+	const [result] = await pool.execute(
+		`
+    INSERT INTO store_purchases (
+      minecraft_uuid, 
+      item_id, 
+      payment_method_id, 
+      discount_id, 
+      status, 
+      price_paid, 
+      transaction_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+		[
+			minecraft_uuid,
+			item_id,
+			payment_method_id,
+			discount_id || null,
+			status,
+			price_paid,
+			transaction_id || null,
+		],
+	);
+
+	return (result as MySQLResult).insertId;
+}
+
+export async function updatePurchase(
+	id: number,
+	data: Partial<StorePurchase>,
+): Promise<boolean> {
+	const fields = Object.entries(data).filter(
+		([key]) =>
+			key !== "id" &&
+			key !== "created_at" &&
+			key !== "updated_at" &&
+			key !== "item_name" &&
+			key !== "payment_method_name",
+	);
+
+	if (fields.length === 0) return false;
+
+	const setClause = fields.map(([key]) => `${key} = ?`).join(", ");
+	const [result] = await pool.execute(
+		`UPDATE store_purchases SET ${setClause}, updated_at = NOW() WHERE id = ?`,
+		[...fields.map(([, value]) => value), id],
+	);
+
+	return (result as MySQLResult).affectedRows > 0;
+}
+
+export async function deletePurchase(id: number): Promise<boolean> {
+	try {
+		const [result] = await pool.execute(
+			"DELETE FROM store_purchases WHERE id = ?",
+			[id],
+		);
+		return (result as MySQLResult).affectedRows > 0;
+	} catch (error) {
+		console.error("Error deleting purchase:", error);
 		return false;
 	}
 }

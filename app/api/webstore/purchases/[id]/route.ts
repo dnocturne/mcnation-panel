@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
-import { ensureWebstoreTables } from "@/lib/database/webstore";
+import {
+	ensureWebstoreTables,
+	getPurchaseById,
+	updatePurchase,
+	deletePurchase,
+} from "@/lib/database/webstore";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -78,10 +83,11 @@ async function checkPermission(
 // GET a specific purchase
 export async function GET(
 	request: Request,
-	context: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
 	// Extract id from params at the beginning of the function
-	const idParam = context.params.id;
+	const params = await context.params;
+	const idParam = params.id;
 
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
@@ -99,25 +105,16 @@ export async function GET(
 			);
 		}
 
-		const [rows] = await pool.execute<RowDataPacket[]>(
-			`SELECT p.*, i.name as item_name, pm.name as payment_method_name,
-              d.code as discount_code, d.percentage as discount_percentage
-       FROM store_purchases p
-       LEFT JOIN store_items i ON p.item_id = i.id
-       LEFT JOIN store_payment_methods pm ON p.payment_method_id = pm.id
-       LEFT JOIN store_discounts d ON p.discount_id = d.id
-       WHERE p.id = ?`,
-			[id],
-		);
+		const purchase = await getPurchaseById(id);
 
-		if (rows.length === 0) {
+		if (!purchase) {
 			return NextResponse.json(
 				{ error: "Purchase not found" },
 				{ status: 404 },
 			);
 		}
 
-		return NextResponse.json(rows[0]);
+		return NextResponse.json(purchase);
 	} catch (error) {
 		console.error(`Error fetching purchase ${idParam}:`, error);
 		return NextResponse.json(
@@ -130,10 +127,11 @@ export async function GET(
 // PUT/PATCH update a purchase
 export async function PUT(
 	request: Request,
-	context: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
 	// Extract id from params at the beginning of the function
-	const idParam = context.params.id;
+	const params = await context.params;
+	const idParam = params.id;
 
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
@@ -150,12 +148,8 @@ export async function PUT(
 		}
 
 		// Check if purchase exists
-		const [checkRows] = await pool.execute<RowDataPacket[]>(
-			"SELECT * FROM store_purchases WHERE id = ?",
-			[id],
-		);
-
-		if (checkRows.length === 0) {
+		const purchase = await getPurchaseById(id);
+		if (!purchase) {
 			return NextResponse.json(
 				{ error: "Purchase not found" },
 				{ status: 404 },
@@ -164,55 +158,29 @@ export async function PUT(
 
 		const data = await request.json();
 
-		// Build the update query based on provided fields
-		const updateFields = [];
-		const updateValues = [];
-
 		// Only allow certain fields to be updated
-		if (data.status !== undefined) {
-			updateFields.push("status = ?");
-			updateValues.push(data.status);
-		}
+		const updateData: any = {
+			...(data.status !== undefined && { status: data.status }),
+			...(data.transaction_id !== undefined && {
+				transaction_id: data.transaction_id,
+			}),
+			...(data.notes !== undefined && { notes: data.notes }),
+			...(data.delivered !== undefined && { delivered: !!data.delivered }),
+			...(data.delivered_at !== undefined && {
+				delivered_at: data.delivered_at,
+			}),
+		};
 
-		if (data.transaction_id !== undefined) {
-			updateFields.push("transaction_id = ?");
-			updateValues.push(data.transaction_id);
-		}
-
-		if (data.notes !== undefined) {
-			updateFields.push("notes = ?");
-			updateValues.push(data.notes);
-		}
-
-		if (data.delivered !== undefined) {
-			updateFields.push("delivered = ?");
-			updateValues.push(!!data.delivered);
-		}
-
-		if (data.delivered_at !== undefined) {
-			updateFields.push("delivered_at = ?");
-			updateValues.push(data.delivered_at);
-		}
-
-		if (updateFields.length === 0) {
+		if (Object.keys(updateData).length === 0) {
 			return NextResponse.json(
 				{ error: "No fields to update" },
 				{ status: 400 },
 			);
 		}
 
-		// Add the ID as the last parameter
-		updateValues.push(id);
+		const success = await updatePurchase(id, updateData);
 
-		const query = `
-      UPDATE store_purchases 
-      SET ${updateFields.join(", ")} 
-      WHERE id = ?
-    `;
-
-		const [result] = await pool.execute(query, updateValues);
-
-		if ((result as ResultSetHeader).affectedRows === 0) {
+		if (!success) {
 			return NextResponse.json(
 				{ error: "No changes were made" },
 				{ status: 400 },
@@ -220,18 +188,9 @@ export async function PUT(
 		}
 
 		// Get updated purchase
-		const [rows] = await pool.execute<RowDataPacket[]>(
-			`SELECT p.*, i.name as item_name, pm.name as payment_method_name,
-              d.code as discount_code, d.percentage as discount_percentage
-       FROM store_purchases p
-       LEFT JOIN store_items i ON p.item_id = i.id
-       LEFT JOIN store_payment_methods pm ON p.payment_method_id = pm.id
-       LEFT JOIN store_discounts d ON p.discount_id = d.id
-       WHERE p.id = ?`,
-			[id],
-		);
+		const updatedPurchase = await getPurchaseById(id);
 
-		return NextResponse.json(rows[0]);
+		return NextResponse.json(updatedPurchase);
 	} catch (error) {
 		console.error(`Error updating purchase ${idParam}:`, error);
 		return NextResponse.json(
@@ -244,10 +203,11 @@ export async function PUT(
 // DELETE a purchase record
 export async function DELETE(
 	request: Request,
-	context: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
 	// Extract id from params at the beginning of the function
-	const idParam = context.params.id;
+	const params = await context.params;
+	const idParam = params.id;
 
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
@@ -264,25 +224,17 @@ export async function DELETE(
 		}
 
 		// Check if purchase exists
-		const [checkRows] = await pool.execute<RowDataPacket[]>(
-			"SELECT * FROM store_purchases WHERE id = ?",
-			[id],
-		);
-
-		if (checkRows.length === 0) {
+		const purchase = await getPurchaseById(id);
+		if (!purchase) {
 			return NextResponse.json(
 				{ error: "Purchase not found" },
 				{ status: 404 },
 			);
 		}
 
-		// Admin note: Deleting purchase records may affect reporting, consider soft deletes
-		const [result] = await pool.execute(
-			"DELETE FROM store_purchases WHERE id = ?",
-			[id],
-		);
+		const success = await deletePurchase(id);
 
-		if ((result as ResultSetHeader).affectedRows === 0) {
+		if (!success) {
 			return NextResponse.json(
 				{ error: "Failed to delete purchase" },
 				{ status: 500 },

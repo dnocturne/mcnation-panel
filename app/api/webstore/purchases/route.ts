@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { pool } from "@/lib/db";
-import { ensureWebstoreTables } from "@/lib/database/webstore";
+import {
+	ensureWebstoreTables,
+	getPurchases,
+	createPurchase,
+} from "@/lib/database/webstore";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
@@ -85,85 +89,39 @@ export async function GET(request: Request) {
 		const { searchParams } = new URL(request.url);
 		const page = Number.parseInt(searchParams.get("page") || "1");
 		const limit = Number.parseInt(searchParams.get("limit") || "25");
-		const offset = (page - 1) * limit;
 		const minecraft_uuid = searchParams.get("minecraft_uuid");
-		const item_id = searchParams.get("item_id");
-		const status = searchParams.get("status");
-		const payment_method = searchParams.get("payment_method");
-		const fromDate = searchParams.get("from");
-		const toDate = searchParams.get("to");
+		const item_id = searchParams.get("item_id")
+			? Number.parseInt(searchParams.get("item_id") || "0")
+			: undefined;
+		const status = searchParams.get("status") || undefined;
+		const payment_method = searchParams.get("payment_method")
+			? Number.parseInt(searchParams.get("payment_method") || "0")
+			: undefined;
+		const fromDate = searchParams.get("from") || undefined;
+		const toDate = searchParams.get("to") || undefined;
 
-		// Build the query
-		let query = `
-      SELECT p.*, i.name as item_name, pm.name as payment_method_name 
-      FROM store_purchases p
-      LEFT JOIN store_items i ON p.item_id = i.id
-      LEFT JOIN store_payment_methods pm ON p.payment_method_id = pm.id
-      WHERE 1=1
-    `;
+		// Get purchases using the new function
+		const result = await getPurchases({
+			minecraftUuid: minecraft_uuid || undefined,
+			itemId: item_id,
+			status,
+			paymentMethodId: payment_method,
+			page,
+			limit,
+			fromDate,
+			toDate,
+		});
 
-		const params: (string | number)[] = [];
-
-		// Add filters if provided
-		if (minecraft_uuid) {
-			query += " AND p.minecraft_uuid = ?";
-			params.push(minecraft_uuid);
-		}
-
-		if (item_id) {
-			query += " AND p.item_id = ?";
-			params.push(Number.parseInt(item_id));
-		}
-
-		if (status) {
-			query += " AND p.status = ?";
-			params.push(status);
-		}
-
-		if (payment_method) {
-			query += " AND p.payment_method_id = ?";
-			params.push(Number.parseInt(payment_method));
-		}
-
-		if (fromDate) {
-			query += " AND p.created_at >= ?";
-			params.push(fromDate);
-		}
-
-		if (toDate) {
-			query += " AND p.created_at <= ?";
-			params.push(toDate);
-		}
-
-		// Count total records for pagination
-		const countQuery = query.replace(
-			"SELECT p.*, i.name as item_name, pm.name as payment_method_name",
-			"SELECT COUNT(*) as total",
-		);
-		const [countRows] = await pool.execute<RowDataPacket[]>(countQuery, params);
-		const totalRecords = countRows[0].total;
-
-		// Add sorting and pagination
-		query += " ORDER BY p.created_at DESC LIMIT ? OFFSET ?";
-		params.push(limit, offset);
-
-		// Execute the query
-		const [rows] = await pool.execute<RowDataPacket[]>(query, params);
-
-		// Calculate pagination metadata
-		const totalPages = Math.ceil(totalRecords / limit);
-		const hasNextPage = page < totalPages;
-		const hasPrevPage = page > 1;
-
+		// Format the response
 		return NextResponse.json({
-			data: rows,
+			data: result.purchases,
 			pagination: {
-				page,
-				limit,
-				totalRecords,
-				totalPages,
-				hasNextPage,
-				hasPrevPage,
+				page: result.page,
+				limit: result.limit,
+				totalRecords: result.total,
+				totalPages: result.totalPages,
+				hasNextPage: result.page < result.totalPages,
+				hasPrevPage: result.page > 1,
 			},
 		});
 	} catch (error) {
@@ -248,45 +206,39 @@ export async function POST(request: Request) {
 			const discount = discountRows[0];
 			discountId = discount.id;
 
-			// Calculate price with discount
-			const discountAmount = itemRows[0].price * (discount.percentage / 100);
-			finalPrice = Math.max(0, itemRows[0].price - discountAmount);
+			// Calculate discounted price
+			finalPrice = itemRows[0].price * (1 - discount.percentage / 100);
+
+			// Update discount usage count
+			await pool.execute(
+				"UPDATE store_discounts SET times_used = times_used + 1 WHERE id = ?",
+				[discount.id],
+			);
 		}
 
-		// Insert the purchase record
-		const [result] = await pool.execute(
-			`INSERT INTO store_purchases 
-       (minecraft_uuid, item_id, payment_method_id, discount_id, amount, status, transaction_id, notes) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-			[
-				data.minecraft_uuid,
-				data.item_id,
-				data.payment_method_id,
-				discountId,
-				finalPrice,
-				data.status || "pending",
-				data.transaction_id || null,
-				data.notes || null,
-			],
-		);
+		// Create the purchase using our new function
+		const purchaseId = await createPurchase({
+			minecraft_uuid: data.minecraft_uuid,
+			item_id: data.item_id,
+			payment_method_id: data.payment_method_id,
+			discount_id: discountId,
+			status: data.status || "pending",
+			price_paid: finalPrice,
+			transaction_id: data.transaction_id,
+		});
 
-		const purchaseId = (result as ResultSetHeader).insertId;
-
-		// Get the newly created purchase record
+		// Get the created purchase
 		const [purchaseRows] = await pool.execute<RowDataPacket[]>(
-			`SELECT p.*, i.name as item_name, pm.name as payment_method_name 
-       FROM store_purchases p
-       LEFT JOIN store_items i ON p.item_id = i.id
-       LEFT JOIN store_payment_methods pm ON p.payment_method_id = pm.id
-       WHERE p.id = ?`,
+			"SELECT * FROM store_purchases WHERE id = ?",
 			[purchaseId],
 		);
 
-		return NextResponse.json(purchaseRows[0], { status: 201 });
+		// Return the created purchase
+		return NextResponse.json({ ...purchaseRows[0], success: true });
 	} catch (error) {
-		console.error("Error creating purchase record:", error);
+		console.error("Error creating purchase:", error);
 		return NextResponse.json(
-			{ error: "Failed to create purchase record" },
+			{ error: "Failed to create purchase" },
 			{ status: 500 },
 		);
 	}
