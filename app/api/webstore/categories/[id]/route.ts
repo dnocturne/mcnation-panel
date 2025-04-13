@@ -79,12 +79,15 @@ async function checkPermission(
 // GET a specific category
 export async function GET(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	try {
 		await ensureTables();
 
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid category ID" },
@@ -102,7 +105,7 @@ export async function GET(
 
 		return NextResponse.json(category);
 	} catch (error) {
-		console.error(`Error fetching category ${params.id}:`, error);
+		console.error(`Error fetching category ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to fetch category" },
 			{ status: 500 },
@@ -113,15 +116,18 @@ export async function GET(
 // PUT/PATCH update a category
 export async function PUT(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
 	}
 
 	try {
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid category ID" },
@@ -150,7 +156,7 @@ export async function PUT(
 		const updatedCategory = await getCategoryById(id);
 		return NextResponse.json(updatedCategory);
 	} catch (error) {
-		console.error(`Error updating category ${params.id}:`, error);
+		console.error(`Error updating category ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to update category" },
 			{ status: 500 },
@@ -161,15 +167,18 @@ export async function PUT(
 // DELETE a category
 export async function DELETE(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
 	}
 
 	try {
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid category ID" },
@@ -196,7 +205,7 @@ export async function DELETE(
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
-		console.error(`Error deleting category ${params.id}:`, error);
+		console.error(`Error deleting category ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to delete category" },
 			{ status: 500 },

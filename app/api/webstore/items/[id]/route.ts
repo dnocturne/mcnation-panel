@@ -81,12 +81,15 @@ async function checkPermission(
 // GET a specific item
 export async function GET(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	try {
 		await ensureTables();
 
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json({ error: "Invalid item ID" }, { status: 400 });
 		}
@@ -104,7 +107,7 @@ export async function GET(
 			paymentMethods,
 		});
 	} catch (error) {
-		console.error(`Error fetching item ${params.id}:`, error);
+		console.error(`Error fetching item ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to fetch item" },
 			{ status: 500 },
@@ -115,15 +118,18 @@ export async function GET(
 // PUT/PATCH update an item
 export async function PUT(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
 	}
 
 	try {
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json({ error: "Invalid item ID" }, { status: 400 });
 		}
@@ -165,7 +171,7 @@ export async function PUT(
 			paymentMethods: updatedPaymentMethods,
 		});
 	} catch (error) {
-		console.error(`Error updating item ${params.id}:`, error);
+		console.error(`Error updating item ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to update item" },
 			{ status: 500 },
@@ -176,15 +182,18 @@ export async function PUT(
 // DELETE an item
 export async function DELETE(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
 	}
 
 	try {
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json({ error: "Invalid item ID" }, { status: 400 });
 		}
@@ -205,7 +214,7 @@ export async function DELETE(
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
-		console.error(`Error deleting item ${params.id}:`, error);
+		console.error(`Error deleting item ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to delete item" },
 			{ status: 500 },

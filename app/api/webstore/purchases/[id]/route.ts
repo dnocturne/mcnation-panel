@@ -78,8 +78,11 @@ async function checkPermission(
 // GET a specific purchase
 export async function GET(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
@@ -88,7 +91,7 @@ export async function GET(
 	try {
 		await ensureTables();
 
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid purchase ID" },
@@ -116,7 +119,7 @@ export async function GET(
 
 		return NextResponse.json(rows[0]);
 	} catch (error) {
-		console.error(`Error fetching purchase ${params.id}:`, error);
+		console.error(`Error fetching purchase ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to fetch purchase" },
 			{ status: 500 },
@@ -127,15 +130,18 @@ export async function GET(
 // PUT/PATCH update a purchase
 export async function PUT(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
 	}
 
 	try {
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid purchase ID" },
@@ -227,7 +233,7 @@ export async function PUT(
 
 		return NextResponse.json(rows[0]);
 	} catch (error) {
-		console.error(`Error updating purchase ${params.id}:`, error);
+		console.error(`Error updating purchase ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to update purchase" },
 			{ status: 500 },
@@ -238,15 +244,18 @@ export async function PUT(
 // DELETE a purchase record
 export async function DELETE(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
 	}
 
 	try {
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid purchase ID" },
@@ -282,7 +291,7 @@ export async function DELETE(
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
-		console.error(`Error deleting purchase ${params.id}:`, error);
+		console.error(`Error deleting purchase ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to delete purchase" },
 			{ status: 500 },

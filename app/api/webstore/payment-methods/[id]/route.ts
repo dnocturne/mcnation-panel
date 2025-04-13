@@ -77,12 +77,16 @@ async function checkPermission(
 // GET a specific payment method
 export async function GET(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
+	// Extract id from params at the beginning of the function
+	const params = await context.params;
+	const idParam = params.id;
+
 	try {
 		await ensureTables();
 
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid payment method ID" },
@@ -104,7 +108,7 @@ export async function GET(
 
 		return NextResponse.json(rows[0]);
 	} catch (error) {
-		console.error(`Error fetching payment method ${params.id}:`, error);
+		console.error(`Error fetching payment method ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to fetch payment method" },
 			{ status: 500 },
@@ -115,15 +119,19 @@ export async function GET(
 // PUT/PATCH update a payment method
 export async function PUT(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
+	// Extract id from params at the beginning of the function
+	const params = await context.params;
+	const idParam = params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
 	}
 
 	try {
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid payment method ID" },
@@ -198,7 +206,7 @@ export async function PUT(
 
 		return NextResponse.json(rows[0]);
 	} catch (error) {
-		console.error(`Error updating payment method ${params.id}:`, error);
+		console.error(`Error updating payment method ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to update payment method" },
 			{ status: 500 },
@@ -209,15 +217,19 @@ export async function PUT(
 // DELETE a payment method
 export async function DELETE(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
+	// Extract id from params at the beginning of the function
+	const params = await context.params;
+	const idParam = params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
 	}
 
 	try {
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid payment method ID" },
@@ -265,7 +277,7 @@ export async function DELETE(
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
-		console.error(`Error deleting payment method ${params.id}:`, error);
+		console.error(`Error deleting payment method ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to delete payment method" },
 			{ status: 500 },

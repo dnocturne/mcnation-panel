@@ -3,8 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StoreItemCard } from "./components/store-item-card";
-import { getStoreItems } from "@/lib/services/store-service";
-import type { StoreItem } from "@/lib/types/store";
+import {
+	getStoreItems,
+	getStoreCategories,
+} from "@/lib/services/store-service";
+import type { StoreItem, StoreCategory } from "@/lib/types/store";
 
 export const metadata: Metadata = {
 	title: "MCNation Store",
@@ -26,8 +29,23 @@ async function fetchStoreItems(): Promise<StoreItem[]> {
 	}
 }
 
+/**
+ * Fetch store categories for the store page
+ */
+async function fetchStoreCategories(): Promise<StoreCategory[]> {
+	try {
+		// Get active categories from the store service
+		const categories = await getStoreCategories(true);
+		return categories;
+	} catch (error) {
+		console.error("Error fetching store categories:", error);
+		return [];
+	}
+}
+
 export default async function StorePage() {
 	const items = await fetchStoreItems();
+	const categories = await fetchStoreCategories();
 	const featuredItems = items.slice(0, 6);
 
 	return (
@@ -104,32 +122,28 @@ export default async function StorePage() {
 					<p className="mt-2 text-muted-foreground">Browse items by category</p>
 				</div>
 
-				<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-					<CategoryCard
-						title="Ranks"
-						description="Exclusive ranks with special permissions"
-						href="/store/category/ranks"
-						imageSrc="/images/ranks.jpg"
-					/>
-					<CategoryCard
-						title="Cosmetics"
-						description="Stand out with unique cosmetic items"
-						href="/store/category/cosmetics"
-						imageSrc="/images/cosmetics.jpg"
-					/>
-					<CategoryCard
-						title="Gameplay"
-						description="Enhance your gameplay experience"
-						href="/store/category/gameplay"
-						imageSrc="/images/gameplay.jpg"
-					/>
-					<CategoryCard
-						title="Special Offers"
-						description="Limited time deals and bundles"
-						href="/store/category/special"
-						imageSrc="/images/special.jpg"
-					/>
-				</div>
+				{categories.length > 0 ? (
+					<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+						{categories.map((category) => (
+							<CategoryCard
+								key={category.id}
+								title={category.name}
+								description={
+									category.description ||
+									`Browse items in the ${category.name} category`
+								}
+								href={`/store/category/${category.name.toLowerCase().replace(/\s+/g, "-")}`}
+								imageSrc={`/images/${category.name.toLowerCase().replace(/\s+/g, "-")}.jpg`}
+							/>
+						))}
+					</div>
+				) : (
+					<div className="text-center py-12">
+						<p className="text-muted-foreground">
+							No categories available at the moment.
+						</p>
+					</div>
+				)}
 			</section>
 
 			{/* FAQ Section */}

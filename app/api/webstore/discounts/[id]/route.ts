@@ -82,21 +82,20 @@ async function checkPermission(
 // Add a type definition for discount update data
 type DiscountUpdateData = Partial<Omit<StoreDiscount, keyof RowDataPacket>>;
 
-// GET a specific discount by ID
+// GET a specific discount
 export async function GET(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
-	const permission = await checkPermission(request);
-	if (!permission.authorized) {
-		return permission.response;
-	}
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
 
 	try {
 		await ensureTables();
 
-		// First try to parse as ID
-		const id = Number.parseInt(params.id);
+		// Parse id if it's a number
+		const id = Number.parseInt(idParam);
+
 		let discount = null;
 
 		if (!Number.isNaN(id)) {
@@ -108,7 +107,7 @@ export async function GET(
 			discount = rows.length > 0 ? rows[0] : null;
 		} else {
 			// Treat as code
-			discount = await getDiscountByCode(params.id);
+			discount = await getDiscountByCode(idParam);
 		}
 
 		if (!discount) {
@@ -120,7 +119,7 @@ export async function GET(
 
 		return NextResponse.json(discount);
 	} catch (error) {
-		console.error(`Error fetching discount ${params.id}:`, error);
+		console.error(`Error fetching discount ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to fetch discount" },
 			{ status: 500 },
@@ -131,15 +130,19 @@ export async function GET(
 // PUT/PATCH update a discount
 export async function PUT(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
 	}
 
 	try {
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
+
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid discount ID" },
@@ -197,7 +200,7 @@ export async function PUT(
 
 		return NextResponse.json(rows[0]);
 	} catch (error: unknown) {
-		console.error(`Error updating discount ${params.id}:`, error);
+		console.error(`Error updating discount ${idParam}:`, error);
 
 		// Check for duplicate code error
 		if (error instanceof Error && error.message.includes("ER_DUP_ENTRY")) {
@@ -217,15 +220,19 @@ export async function PUT(
 // DELETE a discount
 export async function DELETE(
 	request: Request,
-	{ params }: { params: { id: string } },
+	context: { params: { id: string } },
 ) {
+	// Extract id from params at the beginning of the function
+	const idParam = context.params.id;
+
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
 		return permission.response;
 	}
 
 	try {
-		const id = Number.parseInt(params.id);
+		const id = Number.parseInt(idParam);
+
 		if (Number.isNaN(id)) {
 			return NextResponse.json(
 				{ error: "Invalid discount ID" },
@@ -257,7 +264,7 @@ export async function DELETE(
 
 		return NextResponse.json({ success: true });
 	} catch (error) {
-		console.error(`Error deleting discount ${params.id}:`, error);
+		console.error(`Error deleting discount ${idParam}:`, error);
 		return NextResponse.json(
 			{ error: "Failed to delete discount" },
 			{ status: 500 },
