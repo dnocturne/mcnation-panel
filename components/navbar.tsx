@@ -9,6 +9,7 @@ import { useSession, signOut } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useQuery } from "@tanstack/react-query";
 import { usePermission } from "@/hooks/use-permissions";
+import { UserSearch } from "@/components/ui/user-search";
 
 import { cn } from "@/lib/utils";
 import {
@@ -128,6 +129,8 @@ export function NavigationMenuDemo() {
 					</NavigationMenu>
 
 					<div className="flex items-center space-x-4">
+						<UserSearch />
+
 						<TooltipProvider>
 							<Tooltip>
 								<TooltipTrigger asChild>
