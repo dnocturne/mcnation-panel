@@ -50,14 +50,11 @@ export default function DiscountsList() {
 	const columns: ColumnDef<StoreDiscount>[] = [
 		{
 			accessorKey: "code",
-			header: createSortableHeader("Code", "code" as keyof StoreDiscount),
+			header: createSortableHeader("Code"),
 		},
 		{
 			accessorKey: "percentage",
-			header: createSortableHeader(
-				"Discount %",
-				"percentage" as keyof StoreDiscount,
-			),
+			header: createSortableHeader("Discount %"),
 			cell: ({
 				row,
 			}: { row: { getValue: (key: keyof StoreDiscount) => number } }) => {
@@ -67,10 +64,7 @@ export default function DiscountsList() {
 		},
 		{
 			accessorKey: "valid_from",
-			header: createSortableHeader(
-				"Valid From",
-				"valid_from" as keyof StoreDiscount,
-			),
+			header: createSortableHeader("Valid From"),
 			cell: ({
 				row,
 			}: { row: { getValue: (key: keyof StoreDiscount) => string } }) => {
@@ -80,10 +74,7 @@ export default function DiscountsList() {
 		},
 		{
 			accessorKey: "valid_until",
-			header: createSortableHeader(
-				"Valid Until",
-				"valid_until" as keyof StoreDiscount,
-			),
+			header: createSortableHeader("Valid Until"),
 			cell: ({
 				row,
 			}: { row: { getValue: (key: keyof StoreDiscount) => string } }) => {
@@ -93,17 +84,11 @@ export default function DiscountsList() {
 		},
 		{
 			accessorKey: "max_uses",
-			header: createSortableHeader(
-				"Max Uses",
-				"max_uses" as keyof StoreDiscount,
-			),
+			header: createSortableHeader("Max Uses"),
 		},
 		{
 			accessorKey: "times_used",
-			header: createSortableHeader(
-				"Times Used",
-				"times_used" as keyof StoreDiscount,
-			),
+			header: createSortableHeader("Times Used"),
 		},
 		{
 			accessorKey: "active",

@@ -79,10 +79,11 @@ async function checkPermission(
 // GET a specific category
 export async function GET(
 	request: Request,
-	context: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
 	// Extract id from params at the beginning of the function
-	const idParam = context.params.id;
+	const params = await context.params;
+	const idParam = params.id;
 
 	try {
 		await ensureTables();
@@ -116,10 +117,11 @@ export async function GET(
 // PUT/PATCH update a category
 export async function PUT(
 	request: Request,
-	context: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
 	// Extract id from params at the beginning of the function
-	const idParam = context.params.id;
+	const params = await context.params;
+	const idParam = params.id;
 
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
@@ -167,10 +169,11 @@ export async function PUT(
 // DELETE a category
 export async function DELETE(
 	request: Request,
-	context: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
 	// Extract id from params at the beginning of the function
-	const idParam = context.params.id;
+	const params = await context.params;
+	const idParam = params.id;
 
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {

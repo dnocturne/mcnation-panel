@@ -1,33 +1,35 @@
-import { NextResponse } from "next/server"
-import { pool } from "@/lib/db"
-import type { RowDataPacket } from "mysql2"
+import { NextResponse } from "next/server";
+import { pool } from "@/lib/db";
+import type { RowDataPacket } from "mysql2";
 
 interface PunishmentRow extends RowDataPacket {
-  id: number
-  banned_by_name: string
-  reason: string
-  time: number
-  until: number
-  active: number
-  removed_by_name: string | null
-  removed_by_reason: string | null
-  player_name: string
+	id: number;
+	banned_by_name: string;
+	reason: string;
+	time: number;
+	until: number;
+	active: number;
+	removed_by_name: string | null;
+	removed_by_reason: string | null;
+	player_name: string;
 }
 
 export async function GET(
-  request: Request,
-  { params }: { params: { username: string } }
+	request: Request,
+	context: { params: Promise<{ username: string }> },
 ) {
-  const { username } = await params
-  if (!username) {
-    return NextResponse.json(
-      { error: "Missing username parameter" },
-      { status: 400 }
-    )
-  }
+	const params = await context.params;
+	const { username } = params;
 
-  try {
-    const query = `
+	if (!username) {
+		return NextResponse.json(
+			{ error: "Missing username parameter" },
+			{ status: 400 },
+		);
+	}
+
+	try {
+		const query = `
       SELECT 
         p.id,
         p.banned_by_name,
@@ -87,28 +89,34 @@ export async function GET(
         WHERE last_nickname = ?
       )
       AND (? = 'active' AND p.active = 1 OR ? = 'expired' AND p.active = 0 OR ? = 'all')
-      ORDER BY time DESC`
+      ORDER BY time DESC`;
 
-    const { searchParams } = new URL(request.url)
-    const status = searchParams.get('status') || 'all'
+		const { searchParams } = new URL(request.url);
+		const status = searchParams.get("status") || "all";
 
-    const [rows] = await pool.execute<PunishmentRow[]>(
-      query,
-      [
-        username, status, status, status,
-        username, status, status, status,
-        username, status, status, status
-      ]
-    )
+		const [rows] = await pool.execute<PunishmentRow[]>(query, [
+			username,
+			status,
+			status,
+			status,
+			username,
+			status,
+			status,
+			status,
+			username,
+			status,
+			status,
+			status,
+		]);
 
-    return NextResponse.json({
-      items: rows
-    })
-  } catch (error) {
-    console.error(`Error fetching punishments for user ${username}:`, error)
-    return NextResponse.json(
-      { error: "Failed to fetch user punishments" },
-      { status: 500 }
-    )
-  }
-} 
+		return NextResponse.json({
+			items: rows,
+		});
+	} catch (error) {
+		console.error(`Error fetching punishments for user ${username}:`, error);
+		return NextResponse.json(
+			{ error: "Failed to fetch user punishments" },
+			{ status: 500 },
+		);
+	}
+}

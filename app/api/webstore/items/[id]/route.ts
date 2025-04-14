@@ -81,10 +81,11 @@ async function checkPermission(
 // GET a specific item
 export async function GET(
 	request: Request,
-	context: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
 	// Extract id from params at the beginning of the function
-	const idParam = context.params.id;
+	const params = await context.params;
+	const idParam = params.id;
 
 	try {
 		await ensureTables();
@@ -118,10 +119,11 @@ export async function GET(
 // PUT/PATCH update an item
 export async function PUT(
 	request: Request,
-	context: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
 	// Extract id from params at the beginning of the function
-	const idParam = context.params.id;
+	const params = await context.params;
+	const idParam = params.id;
 
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {
@@ -182,10 +184,11 @@ export async function PUT(
 // DELETE an item
 export async function DELETE(
 	request: Request,
-	context: { params: { id: string } },
+	context: { params: Promise<{ id: string }> },
 ) {
 	// Extract id from params at the beginning of the function
-	const idParam = context.params.id;
+	const params = await context.params;
+	const idParam = params.id;
 
 	const permission = await checkPermission(request);
 	if (!permission.authorized) {

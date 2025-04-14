@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/db";
 import {
 	ensureWebstoreTables,
 	getPurchaseById,
@@ -10,7 +9,6 @@ import type { StorePurchase } from "@/lib/database/webstore";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
-import type { RowDataPacket, ResultSetHeader } from "mysql2";
 
 // Initialize tables if needed first
 async function ensureTables() {

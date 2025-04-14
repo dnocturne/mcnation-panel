@@ -22,7 +22,7 @@ async function addOnSaleColumnToStoreItems() {
       SHOW COLUMNS FROM store_items LIKE 'on_sale'
     `);
 
-		// @ts-ignore - MySQL2 typing issue
+		// @ts-expect-error - MySQL2 typing issue
 		if (columns.length === 0) {
 			console.log("Adding on_sale column to store_items table...");
 

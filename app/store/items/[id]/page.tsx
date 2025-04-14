@@ -6,8 +6,9 @@ import { getPaymentMethods } from "@/lib/services/store-service";
 
 export async function generateMetadata({
 	params,
-}: { params: { id: string } }): Promise<Metadata> {
-	const id = Number.parseInt(params.id);
+}: { params: Promise<{ id: string }> }): Promise<Metadata> {
+	const resolvedParams = await params;
+	const id = Number.parseInt(resolvedParams.id);
 
 	if (Number.isNaN(id)) {
 		return {
@@ -41,8 +42,9 @@ export async function generateMetadata({
 
 export default async function StoreItemPage({
 	params,
-}: { params: { id: string } }) {
-	const id = Number.parseInt(params.id);
+}: { params: Promise<{ id: string }> }) {
+	const resolvedParams = await params;
+	const id = Number.parseInt(resolvedParams.id);
 
 	if (Number.isNaN(id)) {
 		notFound();

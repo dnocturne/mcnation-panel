@@ -11,7 +11,7 @@ import {
 import { pool } from "@/lib/db";
 
 // Create mock functions with properly typed parameters
-const mockExecute = mock((..._: unknown[]) => Promise.resolve([[]] as unknown));
+const mockExecute = mock(() => Promise.resolve([[]] as unknown));
 const mockGetConnection = mock(() => Promise.resolve({}));
 
 // Override the pool import with our mocks

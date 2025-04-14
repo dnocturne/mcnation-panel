@@ -7,12 +7,14 @@ export const metadata: Metadata = {
 	description: "Edit an existing item in your webstore",
 };
 
-export default async function EditItemPage({
+export default async function Page({
 	params,
-}: { params: { id: string } }) {
-	// Extract the id parameter first
-	const { id } = params;
-	const itemId = Number.parseInt(id);
+}: {
+	params: Promise<{ id: string }>;
+}) {
+	// Await the params
+	const resolvedParams = await params;
+	const itemId = Number.parseInt(resolvedParams.id);
 
 	return (
 		<StoreAdminClient>

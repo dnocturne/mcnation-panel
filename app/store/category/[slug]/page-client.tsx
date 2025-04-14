@@ -1,15 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import {
-	StoreItem,
-	StoreCategory,
-	StorePaymentMethod,
-} from "@/lib/types/store";
+import type { StoreItem, StoreCategory } from "@/lib/types/store";
 import { StoreItemCard } from "../../components/store-item-card";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import {
 	Select,
 	SelectContent,
@@ -21,13 +16,11 @@ import {
 interface CategoryPageClientProps {
 	category: StoreCategory;
 	items: StoreItem[];
-	paymentMethods: StorePaymentMethod[];
 }
 
 export function CategoryPageClient({
 	category,
 	items,
-	paymentMethods,
 }: CategoryPageClientProps) {
 	const [sortOrder, setSortOrder] = useState<string>("name-asc");
 

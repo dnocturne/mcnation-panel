@@ -1,71 +1,78 @@
-import { NextResponse } from "next/server"
-import { writeFile } from 'node:fs/promises'
-import { join } from 'node:path'
-import { mkdir } from 'node:fs/promises'
-import fs from "node:fs"
-import path from "node:path"
+import { NextResponse } from "next/server";
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { mkdir } from "node:fs/promises";
+import fs from "node:fs";
+import path from "node:path";
 
 export async function POST(
-  request: Request,
-  { params }: { params: { username: string } }
+	request: Request,
+	context: { params: Promise<{ username: string }> },
 ) {
-  const { username } = await params
+	const params = await context.params;
+	const { username } = params;
 
-  try {
-    const formData = await request.formData()
-    const avatar = formData.get('avatar') as File
-    
-    if (!avatar) {
-      return NextResponse.json(
-        { error: "No avatar file provided" },
-        { status: 400 }
-      )
-    }
+	try {
+		const formData = await request.formData();
+		const avatar = formData.get("avatar") as File;
 
-    // Create uploads directory if it doesn't exist
-    const uploadDir = join(process.cwd(), 'public/avatars')
-    await mkdir(uploadDir, { recursive: true })
+		if (!avatar) {
+			return NextResponse.json(
+				{ error: "No avatar file provided" },
+				{ status: 400 },
+			);
+		}
 
-    // Convert File to Buffer
-    const bytes = await avatar.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+		// Create uploads directory if it doesn't exist
+		const uploadDir = join(process.cwd(), "public/avatars");
+		await mkdir(uploadDir, { recursive: true });
 
-    // Save file
-    const filepath = join(uploadDir, `${username}.jpg`)
-    await writeFile(filepath, buffer)
+		// Convert File to Buffer
+		const bytes = await avatar.arrayBuffer();
+		const buffer = Buffer.from(bytes);
 
-    return NextResponse.json({ 
-      success: true,
-      avatarUrl: `/avatars/${username}.jpg`
-    })
-  } catch (error) {
-    console.error('Error uploading avatar:', error)
-    return NextResponse.json(
-      { error: "Failed to upload avatar" },
-      { status: 500 }
-    )
-  }
+		// Save file
+		const filepath = join(uploadDir, `${username}.jpg`);
+		await writeFile(filepath, buffer);
+
+		return NextResponse.json({
+			success: true,
+			avatarUrl: `/avatars/${username}.jpg`,
+		});
+	} catch (error) {
+		console.error("Error uploading avatar:", error);
+		return NextResponse.json(
+			{ error: "Failed to upload avatar" },
+			{ status: 500 },
+		);
+	}
 }
 
 export async function GET(
-  request: Request,
-  { params }: { params: { username: string } }
+	request: Request,
+	context: { params: Promise<{ username: string }> },
 ) {
-  const { username } = await params
-  
-  try {
-    const avatarPath = path.join(process.cwd(), 'public', 'avatars', `${username}.jpg`)
-    const hasCustomAvatar = fs.existsSync(avatarPath)
-    
-    return NextResponse.json({
-      avatarUrl: hasCustomAvatar 
-        ? `/avatars/${username}.jpg` 
-        : `https://mc-heads.net/avatar/${username}`
-    })
-  } catch (error) {
-    console.error('Error checking avatar:', error)
-    return NextResponse.json({ 
-      avatarUrl: `https://mc-heads.net/avatar/${username}` 
-    })
-  }
-} 
+	const params = await context.params;
+	const { username } = params;
+
+	try {
+		const avatarPath = path.join(
+			process.cwd(),
+			"public",
+			"avatars",
+			`${username}.jpg`,
+		);
+		const hasCustomAvatar = fs.existsSync(avatarPath);
+
+		return NextResponse.json({
+			avatarUrl: hasCustomAvatar
+				? `/avatars/${username}.jpg`
+				: `https://mc-heads.net/avatar/${username}`,
+		});
+	} catch (error) {
+		console.error("Error checking avatar:", error);
+		return NextResponse.json({
+			avatarUrl: `https://mc-heads.net/avatar/${username}`,
+		});
+	}
+}

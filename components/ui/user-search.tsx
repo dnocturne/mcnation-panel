@@ -1,6 +1,5 @@
 "use client";
 
-import type { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";

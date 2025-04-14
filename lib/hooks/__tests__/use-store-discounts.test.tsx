@@ -22,7 +22,6 @@ const mockDiscounts: StoreDiscount[] = [
 // Setup test state
 let mockAuthStatus = "authenticated";
 let mockIsAdmin = true;
-let mockRouterPushCalled = false;
 let mockFetchCalled = false;
 
 // Create mock wrapper modules with the same API but that we can control
@@ -34,14 +33,6 @@ const mockStoreApi = {
 			data: mockDiscounts,
 		};
 	},
-};
-
-const mockNextNavigation = {
-	useRouter: () => ({
-		push: (...args: unknown[]) => {
-			mockRouterPushCalled = true;
-		},
-	}),
 };
 
 const mockNextAuth = {
@@ -62,7 +53,6 @@ const mockNextAuth = {
 function useStoreDiscounts(options: { requireAuth?: boolean } = {}) {
 	// We'll implement a simplified version of the hook using our mocks
 	const { data: session, status } = mockNextAuth.useSession();
-	const router = mockNextNavigation.useRouter();
 
 	const isAuthenticated = status === "authenticated";
 	const isAdmin = !!session?.user?.role && session.user.role === "admin";
@@ -120,7 +110,6 @@ describe("useStoreDiscounts hook", () => {
 	beforeEach(() => {
 		mockAuthStatus = "authenticated";
 		mockIsAdmin = true;
-		mockRouterPushCalled = false;
 		mockFetchCalled = false;
 	});
 

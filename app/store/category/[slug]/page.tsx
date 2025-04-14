@@ -1,20 +1,19 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-	getCategories,
-	getItems,
-	getPaymentMethods,
-} from "@/lib/database/webstore";
+import { getCategories, getItems } from "@/lib/database/webstore";
 import { CategoryPageClient } from "./page-client";
 import type { StoreItem, StoreCategory } from "@/lib/types/store";
 
 type Props = {
-	params: { slug: string };
+	params: Promise<{ slug: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+	// Await the params
+	const resolvedParams = await params;
+
 	// Convert slug to a more readable format (e.g., "special-offers" to "Special Offers")
-	const title = params.slug
+	const title = resolvedParams.slug
 		.split("-")
 		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 		.join(" ");
@@ -26,8 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CategoryPage({ params }: Props) {
-	// Get slug parameter
-	const slug = params.slug;
+	// Await and get slug parameter
+	const resolvedParams = await params;
+	const slug = resolvedParams.slug;
 
 	// Get all categories
 	const categories = await getCategories();
@@ -45,14 +45,10 @@ export default async function CategoryPage({ params }: Props) {
 	// Get items for this category
 	const items = await getItems(true, category.id);
 
-	// Get payment methods for the store
-	const paymentMethods = await getPaymentMethods();
-
 	return (
 		<CategoryPageClient
 			category={category as StoreCategory}
 			items={items as unknown as StoreItem[]}
-			paymentMethods={paymentMethods}
 		/>
 	);
 }

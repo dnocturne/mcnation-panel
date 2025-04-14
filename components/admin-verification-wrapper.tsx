@@ -57,10 +57,12 @@ export function AdminVerificationWrapper({
 				isOpen={isVerificationModalOpen}
 				onClose={() => {
 					setIsVerificationModalOpen(false);
-					// If user cancels verification, redirect back to main page
-					if (!isAdminVerified) {
-						router.push("/");
-					}
+					// Comment out the auto-redirect when verification modal is closed
+					// If the user actively cancels verification, they might want to stay on the page
+					// and try again later instead of being forced back to the home page
+					// if (!isAdminVerified) {
+					// 	router.push("/");
+					// }
 				}}
 				onVerified={() => {
 					// Continue showing the admin page

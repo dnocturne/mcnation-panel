@@ -14,11 +14,13 @@ export function StoreAdminClient({ children }: { children: React.ReactNode }) {
 	const { data: session, status } = useSession();
 	const { isAdminVerified } = useAdminVerification();
 	const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+	const [isNavigating, setIsNavigating] = useState(false);
 	const router = useRouter();
 
 	useEffect(() => {
 		// Check if user is logged in
 		if (status === "unauthenticated") {
+			setIsNavigating(true);
 			router.push(
 				`/login?redirect=${encodeURIComponent(window.location.pathname)}`,
 			);
@@ -28,13 +30,16 @@ export function StoreAdminClient({ children }: { children: React.ReactNode }) {
 		// Check if user is an admin
 		const isAdmin = session?.user?.role === "admin";
 		if (status === "authenticated" && !isAdmin) {
+			setIsNavigating(true);
 			router.push("/");
 			return;
 		}
 
 		// Check store permission
 		if (!permissionLoading && hasPermission === false) {
+			setIsNavigating(true);
 			router.push("/admin");
+			return;
 		}
 
 		// If authenticated but not admin-verified, show verification modal
@@ -49,6 +54,11 @@ export function StoreAdminClient({ children }: { children: React.ReactNode }) {
 		hasPermission,
 		permissionLoading,
 	]);
+
+	// Prevent flashes of content during redirects
+	if (isNavigating) {
+		return <LoadingSpinner text="Redirecting..." />;
+	}
 
 	if (status === "loading" || permissionLoading) {
 		return <LoadingSpinner text="Checking store permissions..." />;
@@ -66,13 +76,15 @@ export function StoreAdminClient({ children }: { children: React.ReactNode }) {
 				isOpen={isVerificationModalOpen}
 				onClose={() => {
 					setIsVerificationModalOpen(false);
-					// If user cancels verification, redirect back to main page
-					if (!isAdminVerified) {
-						router.push("/");
-					}
+					// Comment out the auto-redirect when verification modal is closed
+					// Let users stay on the page if they want to try verifying again
+					// if (!isAdminVerified) {
+					// 	setIsNavigating(true);
+					// 	router.push("/");
+					// }
 				}}
 				onVerified={() => {
-					// Continue showing the admin page
+					// Continue showing the admin page without any redirection
 					setIsVerificationModalOpen(false);
 				}}
 			/>

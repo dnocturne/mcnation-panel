@@ -63,18 +63,30 @@ export function useAuth() {
 			return { success: false, error: "No active session" };
 		}
 
-		const result = await signIn("credentials", {
-			username,
-			password,
-			redirect: false,
-		});
+		try {
+			// Instead of using signIn (which can cause navigation issues),
+			// directly verify the password via a dedicated API endpoint
+			const response = await fetch("/api/auth/verify-admin", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({ password }),
+			});
 
-		if (result?.error) {
-			return { success: false, error: "Password verification failed" };
+			const result = await response.json();
+
+			if (!response.ok || !result.success) {
+				return { success: false, error: "Password verification failed" };
+			}
+
+			// Set admin as verified
+			setAdminVerified(true);
+			return { success: true };
+		} catch (error) {
+			console.error("Admin verification error:", error);
+			return { success: false, error: "Verification request failed" };
 		}
-
-		setAdminVerified(true);
-		return { success: true };
 	};
 
 	return {

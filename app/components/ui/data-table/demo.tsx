@@ -58,7 +58,7 @@ export function DataTableDemo() {
 	const columns: ColumnDef<User>[] = [
 		{
 			accessorKey: "name",
-			header: createSortableHeader("Name", "name"),
+			header: createSortableHeader("Name"),
 		},
 		{
 			accessorKey: "email",
@@ -66,7 +66,7 @@ export function DataTableDemo() {
 		},
 		{
 			accessorKey: "role",
-			header: createSortableHeader("Role", "role"),
+			header: createSortableHeader("Role"),
 		},
 		{
 			accessorKey: "status",
@@ -82,7 +82,7 @@ export function DataTableDemo() {
 		},
 		{
 			accessorKey: "lastLogin",
-			header: createSortableHeader("Last Login", "lastLogin"),
+			header: createSortableHeader("Last Login"),
 			cell: createDateCell("lastLogin"),
 		},
 		{
@@ -91,7 +91,7 @@ export function DataTableDemo() {
 		},
 		{
 			accessorKey: "subscription.price",
-			header: createSortableHeader("Price", "subscription.price" as keyof User),
+			header: createSortableHeader("Price"),
 			cell: createCurrencyCell("subscription.price" as keyof User),
 		},
 		createActionsColumn<User>({

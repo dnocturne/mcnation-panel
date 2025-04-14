@@ -6,12 +6,13 @@ export const metadata: Metadata = {
 	description: "Log into your MCNation Panel account",
 };
 
-export default function LoginPage({
+export default async function LoginPage({
 	searchParams,
 }: {
-	searchParams: { redirect?: string };
+	searchParams: Promise<{ redirect?: string }>;
 }) {
-	const redirectPath = searchParams.redirect || "/";
+	const resolvedParams = await searchParams;
+	const redirectPath = resolvedParams.redirect || "/";
 
 	return (
 		<div className="container mx-auto flex h-screen flex-col items-center justify-center">

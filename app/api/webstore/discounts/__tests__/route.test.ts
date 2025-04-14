@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, mock } from "bun:test";
+import { describe, it, expect, beforeEach } from "bun:test";
 import type { NextRequest } from "next/server";
 
 // Define types
@@ -34,13 +34,10 @@ const mockWebstoreDb = {
 	},
 };
 
-// Create wrapped handlers that use our mock implementations
-import * as originalRoutes from "../route";
-
 // Now create wrapped versions of the route handlers that use our mocks
-const GET = async (req: NextRequest) => {
+const GET = async () => {
 	// Create a handler that uses our mocks instead of the real modules
-	const handler = async (r: NextRequest) => {
+	const handler = async () => {
 		// Mock the modules by overriding the imported modules with proxies
 		const getServerSession = mockAuth.getServerSession;
 		const getDiscounts = mockWebstoreDb.getDiscounts;
@@ -75,7 +72,7 @@ const GET = async (req: NextRequest) => {
 			const discounts = await getDiscounts();
 
 			return Response.json({ success: true, discounts });
-		} catch (error) {
+		} catch {
 			return Response.json(
 				{
 					error: "Failed to fetch discount codes",
@@ -85,12 +82,12 @@ const GET = async (req: NextRequest) => {
 		}
 	};
 
-	return handler(req);
+	return handler();
 };
 
 const POST = async (req: NextRequest) => {
 	// Create a handler that uses our mocks
-	const handler = async (r: NextRequest) => {
+	const handler = async () => {
 		// Mock the modules
 		const getServerSession = mockAuth.getServerSession;
 		const createDiscount = mockWebstoreDb.createDiscount;
@@ -121,7 +118,7 @@ const POST = async (req: NextRequest) => {
 			}
 
 			// Parse request body
-			const discountData = await r.json();
+			const discountData = await req.json();
 
 			// Create discount
 			const newDiscount = await createDiscount(discountData);
@@ -133,7 +130,7 @@ const POST = async (req: NextRequest) => {
 				},
 				{ status: 201 },
 			);
-		} catch (error) {
+		} catch {
 			return Response.json(
 				{
 					error: "Failed to create discount code",
@@ -143,7 +140,7 @@ const POST = async (req: NextRequest) => {
 		}
 	};
 
-	return handler(req);
+	return handler();
 };
 
 describe("Discounts API", () => {
@@ -155,19 +152,14 @@ describe("Discounts API", () => {
 
 	describe("GET handler", () => {
 		it("should return a response", async () => {
-			const req = {} as unknown as NextRequest;
-			const response = await GET(req);
+			const response = await GET();
 			expect(response.status).toBeTruthy();
 		});
 
 		it("should return 401 when not authenticated", async () => {
 			mockSession = null;
 
-			const req = {
-				url: "http://localhost/api/webstore/discounts",
-			} as unknown as NextRequest;
-
-			const response = await GET(req);
+			const response = await GET();
 			expect(response.status).toBe(401);
 
 			const data = await response.json();
@@ -180,11 +172,7 @@ describe("Discounts API", () => {
 				user: { role: "user" },
 			};
 
-			const req = {
-				url: "http://localhost/api/webstore/discounts",
-			} as unknown as NextRequest;
-
-			const response = await GET(req);
+			const response = await GET();
 			expect(response.status).toBe(403);
 
 			const data = await response.json();
@@ -197,11 +185,7 @@ describe("Discounts API", () => {
 				user: { role: "admin" },
 			};
 
-			const req = {
-				url: "http://localhost/api/webstore/discounts",
-			} as unknown as NextRequest;
-
-			const response = await GET(req);
+			const response = await GET();
 			expect(response.status).toBe(200);
 
 			const data = await response.json();
@@ -215,11 +199,7 @@ describe("Discounts API", () => {
 			};
 			shouldThrowError = true;
 
-			const req = {
-				url: "http://localhost/api/webstore/discounts",
-			} as unknown as NextRequest;
-
-			const response = await GET(req);
+			const response = await GET();
 			expect(response.status).toBe(500);
 
 			const data = await response.json();

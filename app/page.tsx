@@ -3,7 +3,6 @@ import { NavigationMenuDemo } from "@/components/navbar";
 import { DiscordWidget } from "@/components/discord-widget";
 import { ServerMonitor } from "@/components/server-monitor";
 import { Shield, Users, Award, Sword, Rocket, Globe } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 
 export default function HeroSectionGradientBackground() {
@@ -179,7 +178,7 @@ export default function HeroSectionGradientBackground() {
 										<span className="bg-primary/10 text-primary font-bold rounded-full w-6 h-6 flex items-center justify-center mt-0.5">
 											1
 										</span>
-										<p>Register an account on our website</p>
+										<p>Register an account in-game and login to our website.</p>
 									</li>
 									<li className="flex items-start gap-3">
 										<span className="bg-primary/10 text-primary font-bold rounded-full w-6 h-6 flex items-center justify-center mt-0.5">

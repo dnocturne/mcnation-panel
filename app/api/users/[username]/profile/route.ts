@@ -57,9 +57,11 @@ async function getHighestRank(groups: string[]): Promise<string> {
 
 export async function GET(
 	request: Request,
-	{ params }: { params: { username: string } },
+	context: { params: Promise<{ username: string }> },
 ) {
-	const { username } = await params;
+	const params = await context.params;
+	const { username } = params;
+
 	if (!username) {
 		return NextResponse.json(
 			{ error: "Missing username parameter" },

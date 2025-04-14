@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { NavigationMenuDemo } from "@/components/navbar";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import { AlertCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
-export default function LoginPage() {
+// Component that uses search params
+function LoginForm() {
 	const [username, setUsername] = useState("");
 	const [password, setPassword] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +56,50 @@ export default function LoginPage() {
 	}
 
 	return (
+		<form onSubmit={onSubmit}>
+			<CardContent className="space-y-4">
+				<div className="space-y-2">
+					<Label htmlFor="username">Username</Label>
+					<Input
+						id="username"
+						placeholder="Enter your Minecraft username"
+						value={username}
+						onChange={(e) => setUsername(e.target.value)}
+						required
+					/>
+				</div>
+				<div className="space-y-2">
+					<Label htmlFor="password">Password</Label>
+					<Input
+						id="password"
+						type="password"
+						placeholder="Enter your password"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+						required
+					/>
+				</div>
+
+				{error && (
+					<div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+						<div className="flex items-center gap-2">
+							<AlertCircle className="h-4 w-4" />
+							<p>{error}</p>
+						</div>
+					</div>
+				)}
+			</CardContent>
+			<CardFooter>
+				<Button className="w-full" type="submit" disabled={isLoading}>
+					{isLoading ? "Logging in..." : "Login"}
+				</Button>
+			</CardFooter>
+		</form>
+	);
+}
+
+export default function LoginPage() {
+	return (
 		<div className="min-h-screen bg-background relative">
 			<NavigationMenuDemo />
 			<div className="absolute inset-0 flex items-center justify-center">
@@ -65,45 +110,15 @@ export default function LoginPage() {
 							Enter your Minecraft username and password to continue
 						</CardDescription>
 					</CardHeader>
-					<form onSubmit={onSubmit}>
-						<CardContent className="space-y-4">
-							<div className="space-y-2">
-								<Label htmlFor="username">Username</Label>
-								<Input
-									id="username"
-									placeholder="Enter your Minecraft username"
-									value={username}
-									onChange={(e) => setUsername(e.target.value)}
-									required
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="password">Password</Label>
-								<Input
-									id="password"
-									type="password"
-									placeholder="Enter your password"
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-									required
-								/>
-							</div>
-
-							{error && (
-								<div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-									<div className="flex items-center gap-2">
-										<AlertCircle className="h-4 w-4" />
-										<p>{error}</p>
-									</div>
-								</div>
-							)}
-						</CardContent>
-						<CardFooter>
-							<Button className="w-full" type="submit" disabled={isLoading}>
-								{isLoading ? "Logging in..." : "Login"}
-							</Button>
-						</CardFooter>
-					</form>
+					<Suspense
+						fallback={
+							<CardContent>
+								<div className="py-8 text-center">Loading login form...</div>
+							</CardContent>
+						}
+					>
+						<LoginForm />
+					</Suspense>
 				</Card>
 			</div>
 		</div>
