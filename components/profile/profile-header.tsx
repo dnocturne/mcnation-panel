@@ -50,6 +50,7 @@ export function ProfileHeader({
 				<AvatarUpload
 					username={username}
 					currentAvatarUrl={userProfile?.avatarUrl}
+					isEditable={isOwnProfile}
 				/>
 				<div>
 					<h1 className="text-4xl font-bold">

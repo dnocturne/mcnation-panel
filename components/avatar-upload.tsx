@@ -17,11 +17,13 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 interface AvatarUploadProps {
 	username: string;
 	currentAvatarUrl?: string;
+	isEditable?: boolean;
 }
 
 export function AvatarUpload({
 	username,
 	currentAvatarUrl,
+	isEditable = false,
 }: AvatarUploadProps) {
 	const [image, setImage] = useState<File | null>(null);
 	const [scale, setScale] = useState([1]);
@@ -83,6 +85,16 @@ export function AvatarUpload({
 		// Fallback to Minecraft skin if no custom avatar
 		return `https://mc-heads.net/avatar/${username}`;
 	};
+
+	// If not editable, just show the avatar without upload functionality
+	if (!isEditable) {
+		return (
+			<Avatar className="h-32 w-32">
+				<AvatarImage src={getAvatarSrc()} alt={username} />
+				<AvatarFallback>CN</AvatarFallback>
+			</Avatar>
+		);
+	}
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>

@@ -2,7 +2,6 @@
 import "@testing-library/jest-dom";
 import "jest-extended";
 import { enableFetchMocks } from "jest-fetch-mock";
-import type { NextRouter } from "next/router";
 
 // Enable fetch mocks for testing API calls
 enableFetchMocks();
