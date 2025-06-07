@@ -69,5 +69,14 @@ describe("Utility Functions", () => {
 		it("should handle invalid dates gracefully", () => {
 			expect(formatDate("not-a-date")).toBe("Invalid date");
 		});
+
+		it("should handle invalid Date objects with NaN time", () => {
+			const invalidDate = new Date("invalid");
+			expect(formatDate(invalidDate)).toBe("Invalid date");
+		});
+
+		it("should handle edge case with empty string", () => {
+			expect(formatDate("")).toBe("Invalid date");
+		});
 	});
 });
